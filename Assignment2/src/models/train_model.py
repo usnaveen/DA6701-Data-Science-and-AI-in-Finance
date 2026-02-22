@@ -73,7 +73,7 @@ N_CV_SPLITS      = 5
 MIN_TRAIN_SIZE   = 252     # ~1 year of trading days minimum
 RFE_N_FEATURES   = 30      # target feature count after RFE
 EXCLUDE_COLS     = ["ticker", "target", "Open", "High", "Low", "Close", "Volume",
-                     "Log_Return", "Return"]
+                     "Log_Return", "Return", "Ticker","ticker"]
 
 
 # ─── Model Factory ────────────────────────────────────────────────────────────
@@ -221,7 +221,6 @@ def train_ticker(
     print(f"Training: {ticker}")
     print(f"{'='*50}")
 
-    # Filter to this ticker
     tr = train_df[train_df["ticker"] == ticker].copy().sort_index()
     te = test_df[test_df["ticker"] == ticker].copy().sort_index()
 
@@ -229,7 +228,14 @@ def train_ticker(
         print(f"  No training data for {ticker}. Skipping.")
         return {}
 
-    feature_cols = [c for c in tr.columns if c not in EXCLUDE_COLS]
+    # Drop ALL non-numeric and excluded columns — catches 'ticker', 'Ticker', etc.
+    feature_cols = [
+        c for c in tr.columns
+        if c not in EXCLUDE_COLS
+        and tr[c].dtype != object
+        and pd.api.types.is_numeric_dtype(tr[c])
+    ]
+
     X_tr = tr[feature_cols].fillna(0)
     y_tr = tr["target"]
     X_te = te[feature_cols].fillna(0) if not te.empty else pd.DataFrame()
@@ -339,7 +345,7 @@ def main():
         fi_df["mean"] = fi_df.mean(axis=1)
         fi_df.sort_values("mean", ascending=False, inplace=True)
         fi_df.to_csv(OUTPUT_DIR / "feature_importance.csv")
-        print(f"\nTop 10 features (avg importance):")
+        print("\nTop 10 features (avg importance):")
         print(fi_df["mean"].head(10).round(4))
 
     if all_fwd_preds:

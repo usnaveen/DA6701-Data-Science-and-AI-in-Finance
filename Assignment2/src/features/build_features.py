@@ -198,7 +198,7 @@ def build_ticker_features(
 
 # ─── Robust Scaling ───────────────────────────────────────────────────────────
 
-EXCLUDE_FROM_SCALING = ["ticker", "target", "Date"]
+EXCLUDE_FROM_SCALING = ["ticker", "target", "Date", "Ticker"]
 
 def scale_features(
     train_df: pd.DataFrame,

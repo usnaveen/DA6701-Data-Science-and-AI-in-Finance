@@ -242,7 +242,8 @@ def plot_equity_curve(portfolio: pd.DataFrame, metrics: dict, method: str):
     cum = (1 + portfolio["portfolio_return"]).cumprod()
     running_max = cum.cummax()
     drawdown = (cum - running_max) / running_max * 100
-    drawdown.plot(ax=ax2, color="crimson", linewidth=1.5, fill=True, alpha=0.4)
+    drawdown.plot(ax=ax2, color="crimson", linewidth=1.5, alpha=0.7)
+    ax2.fill_between(drawdown.index, drawdown.values, 0, color="crimson", alpha=0.3)
     ax2.set_title("Drawdown (%)")
     ax2.set_ylabel("Drawdown (%)")
     ax2.grid(alpha=0.3)

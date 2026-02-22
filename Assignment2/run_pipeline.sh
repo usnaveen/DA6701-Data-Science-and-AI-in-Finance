@@ -8,8 +8,8 @@
 #   bash run_pipeline.sh --newsapi-key YOUR_KEY
 #
 # Prerequisites:
-#   pip install yfinance pandas numpy scikit-learn xgboost lightgbm
-#               requests beautifulsoup4 transformers torch tqdm scipy
+# pip install yfinance pandas numpy scikit-learn xgboost lightgbm \
+#               requests beautifulsoup4 transformers torch tqdm scipy \
 #               matplotlib joblib pyarrow
 
 set -e  # exit on error

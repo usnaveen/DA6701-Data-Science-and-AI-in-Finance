@@ -44,7 +44,8 @@ RAW_MACRO_DIR.mkdir(parents=True, exist_ok=True)
 YF_MACRO = {
     "USDINR":    "INR=X",        # USD/INR spot
     "BRENT_OIL": "BZ=F",         # Brent crude futures
-    "INDIA_10Y": "^IN10YT=RR",   # India 10-yr bond yield (may not always work)
+    # "INDIA_10Y": "^IN10YT=RR",   # India 10-yr bond yield (may not always work)
+    "INDIA_10Y": "^INDIAVIX",   # India 10-yr bond yield (may not always work)
     "NIFTY50":   "^NSEI",        # Nifty 50 index (useful market-level feature)
     "VIX_INDIA": "^NSEBANK",     # Bank Nifty as proxy for market stress
 }
@@ -79,19 +80,18 @@ def fetch_yf_series(name: str, yf_ticker: str) -> pd.Series:
 
 
 def fetch_fred_csv(series_id: str, name: str) -> pd.Series:
-    """
-    Download a FRED series via their public CSV endpoint — no API key needed.
-    URL: https://fred.stlouisfed.org/graph/fredgraph.csv?id=SERIES_ID
-    """
     url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}"
     print(f"  Fetching {name} ({series_id}) from FRED ...")
     try:
-        df = pd.read_csv(url, parse_dates=["DATE"], index_col="DATE")
-        s = df.squeeze().rename(name)
-        s = s[s.index >= START_DATE]
-        s = s[s.index <= END_DATE]
-        s.replace(".", np.nan, inplace=True)
-        s = s.astype(float)
+        df = pd.read_csv(url, header=0)
+        df.columns = df.columns.str.strip()
+        date_col = df.columns[0]
+        val_col  = df.columns[1]
+        df[date_col] = pd.to_datetime(df[date_col], errors="coerce")
+        df = df.dropna(subset=[date_col]).set_index(date_col)
+        s = df[val_col].replace(".", np.nan).astype(float).rename(name)
+        s.index = pd.to_datetime(s.index)
+        s = s[(s.index >= START_DATE) & (s.index <= END_DATE)]
         return s
     except Exception as e:
         print(f"    ERROR fetching FRED series {series_id}: {e}")

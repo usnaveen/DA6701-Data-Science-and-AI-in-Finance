@@ -44,10 +44,9 @@ RAW_MACRO_DIR.mkdir(parents=True, exist_ok=True)
 YF_MACRO = {
     "USDINR":    "INR=X",        # USD/INR spot
     "BRENT_OIL": "BZ=F",         # Brent crude futures
-    # "INDIA_10Y": "^IN10YT=RR",   # India 10-yr bond yield (may not always work)
-    "INDIA_10Y": "^INDIAVIX",   # India 10-yr bond yield (may not always work)
+    "INDIA_10Y": "^INBMK10Y",   # India 10-yr bond yield (may not always work)
     "NIFTY50":   "^NSEI",        # Nifty 50 index (useful market-level feature)
-    "VIX_INDIA": "^NSEBANK",     # Bank Nifty as proxy for market stress
+    "VIX_INDIA": "^INDIAVIX",    # India VIX (market stress proxy)
 }
 
 # FRED series IDs (free, no key required for bulk CSV downloads)

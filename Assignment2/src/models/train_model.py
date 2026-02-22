@@ -155,7 +155,8 @@ def select_features_rfe(X_train, y_train, feature_cols) -> list:
         cv=tscv,
         scoring="neg_mean_squared_error",
         min_features_to_select=10,
-        n_jobs=-1,
+        # n_jobs=1 avoids process-spawn failures in restricted environments.
+        n_jobs=1,
     )
     rfe.fit(X_train, y_train)
     selected = [f for f, s in zip(feature_cols, rfe.support_) if s]
@@ -239,7 +240,7 @@ def train_ticker(
     X_tr = tr[feature_cols].fillna(0)
     y_tr = tr["target"]
     X_te = te[feature_cols].fillna(0) if not te.empty else pd.DataFrame()
-    y_te = te["target"] if not te.empty else pd.Series()
+    y_te = te["target"] if not te.empty else pd.Series(dtype=float)
 
     print(f"  Train: {X_tr.shape}   Forward-test: {X_te.shape}")
 
@@ -349,8 +350,9 @@ def main():
         print(fi_df["mean"].head(10).round(4))
 
     if all_fwd_preds:
-        fwd_df = pd.concat(all_fwd_preds, axis=1)
-        fwd_df.to_csv(OUTPUT_DIR / "predictions_fwd_test.csv")
+        fwd_df = pd.concat(all_fwd_preds, axis=1).sort_index()
+        fwd_df.index.name = "Date"
+        fwd_df.to_csv(OUTPUT_DIR / "predictions_fwd_test.csv", index_label="Date")
         print(f"\nForward-test predictions → {OUTPUT_DIR}/predictions_fwd_test.csv")
 
     print("\nAll models trained. Done.")

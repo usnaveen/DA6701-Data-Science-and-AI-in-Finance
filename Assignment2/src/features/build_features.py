@@ -157,7 +157,16 @@ def load_sentiment() -> pd.DataFrame:
     if not path.exists():
         print("  WARNING: news_sentiment.csv not found. Skipping sentiment features.")
         return pd.DataFrame()
-    return pd.read_csv(path, parse_dates=["Date"], index_col="Date")
+    sentiment = pd.read_csv(path, parse_dates=["Date"], index_col="Date")
+
+    # Backward compatibility with historical extract naming.
+    if "M&M_sentiment" in sentiment.columns and "MM_sentiment" not in sentiment.columns:
+        sentiment = sentiment.rename(columns={"M&M_sentiment": "MM_sentiment"})
+    elif "M&M_sentiment" in sentiment.columns and "MM_sentiment" in sentiment.columns:
+        sentiment["MM_sentiment"] = sentiment["MM_sentiment"].fillna(sentiment["M&M_sentiment"])
+        sentiment = sentiment.drop(columns=["M&M_sentiment"])
+
+    return sentiment
 
 
 # ─── Per-Ticker Feature Engineering ──────────────────────────────────────────

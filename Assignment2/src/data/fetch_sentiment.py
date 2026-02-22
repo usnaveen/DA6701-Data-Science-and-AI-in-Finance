@@ -30,15 +30,16 @@ warnings.filterwarnings("ignore")
 
 # ─── Configuration ────────────────────────────────────────────────────────────
 
-TICKERS = ["RELIANCE", "HDFCBANK", "INFY", "M&M", "BHARTIARTL", "HUL"]
+TICKERS = ["RELIANCE", "HDFCBANK", "INFY", "MM", "BHARTIARTL", "HUL"]
 COMPANY_NAMES = {
     "RELIANCE":   "Reliance Industries",
     "HDFCBANK":   "HDFC Bank",
     "INFY":       "Infosys",
-    "M&M":        "Mahindra Mahindra",
+    "MM":         "Mahindra Mahindra",
     "BHARTIARTL": "Bharti Airtel",
     "HUL":        "Hindustan Unilever",
 }
+LEGACY_TICKER_MAP = {"MM": "M&M"}
 
 START_DATE = "2020-01-01"
 END_DATE   = "2025-12-31"
@@ -53,6 +54,15 @@ PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
 
 # ─── GDELT Fetcher (with caching + rate-limit handling) ───────────────────────
 
+def _headline_cache_candidates(ticker: str) -> list[Path]:
+    """Return canonical + legacy cache filenames to preserve backward compatibility."""
+    candidates = [NEWS_DIR / f"{ticker}_headlines.csv"]
+    legacy_ticker = LEGACY_TICKER_MAP.get(ticker)
+    if legacy_ticker:
+        candidates.append(NEWS_DIR / f"{legacy_ticker}_headlines.csv")
+    return candidates
+
+
 def fetch_gdelt(ticker: str, start: str, end: str, refetch: bool = False) -> pd.DataFrame:
     """
     Fetch headlines from GDELT 2.0.
@@ -61,12 +71,15 @@ def fetch_gdelt(ticker: str, start: str, end: str, refetch: bool = False) -> pd.
     - On 429, sleeps 60s then retries up to 3 times.
     - 5s polite delay between each quarterly request.
     """
-    cache_path = NEWS_DIR / f"{ticker}_headlines.csv"
+    cache_candidates = _headline_cache_candidates(ticker)
+    cache_path = cache_candidates[0]
 
     # Return cached data if available and refetch not forced
-    if cache_path.exists() and not refetch:
-        print(f"  GDELT: {ticker} — loading from cache ({cache_path})")
-        return pd.read_csv(cache_path)
+    if not refetch:
+        for candidate in cache_candidates:
+            if candidate.exists():
+                print(f"  GDELT: {ticker} — loading from cache ({candidate})")
+                return pd.read_csv(candidate)
 
     query = COMPANY_NAMES.get(ticker, ticker)
     print(f"  GDELT: {ticker} ({query}) — fetching ...")
@@ -156,7 +169,7 @@ def fetch_newsapi(ticker: str, api_key: str, days_back: int = 30) -> pd.DataFram
     try:
         resp = requests.get(
             NEWSAPI_BASE,
-            params=dict(q=query, from_date=from_date, language="en",
+            params=dict(q=query, **{"from": from_date}, language="en",
                         sortBy="publishedAt", pageSize=100, apiKey=api_key),
             timeout=20,
         )

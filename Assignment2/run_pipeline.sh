@@ -14,7 +14,7 @@
 
 set -e  # exit on error
 
-NEWSAPI_KEY=""
+NEWSAPI_KEY="77f16e3455e64337aab74474739d4898"
 PORTFOLIO_METHOD="predicted_return"
 
 # Parse optional args
@@ -34,36 +34,49 @@ echo ""
 
 cd "$(dirname "$0")"
 
+if [[ -x "../.venv/bin/python3" ]]; then
+    PYTHON_BIN="../.venv/bin/python3"
+elif [[ -x ".venv/bin/python3" ]]; then
+    PYTHON_BIN=".venv/bin/python3"
+elif command -v python3 >/dev/null 2>&1; then
+    PYTHON_BIN="python3"
+else
+    echo "ERROR: python3 not found. Activate your environment or install python3."
+    exit 1
+fi
+
+echo "Using Python interpreter: $PYTHON_BIN"
+
 echo ">>> Step 1: Fetch Market Data (OHLCV)"
-python src/data/fetch_market_data.py
+"$PYTHON_BIN" src/data/fetch_market_data.py
 
 echo ""
 echo ">>> Step 2: Fetch Macro Indicators"
-python src/data/fetch_macro_data.py
+"$PYTHON_BIN" src/data/fetch_macro_data.py
 
 echo ""
 echo ">>> Step 3: Fetch Fundamental Data"
-python src/data/fetch_fundamentals.py
+"$PYTHON_BIN" src/data/fetch_fundamentals.py
 
 echo ""
 echo ">>> Step 4: Fetch News Sentiment"
 if [[ -n "$NEWSAPI_KEY" ]]; then
-    python src/data/fetch_sentiment.py --newsapi-key "$NEWSAPI_KEY"
+    "$PYTHON_BIN" src/data/fetch_sentiment.py --newsapi-key "$NEWSAPI_KEY"
 else
-    python src/data/fetch_sentiment.py
+    "$PYTHON_BIN" src/data/fetch_sentiment.py
 fi
 
 echo ""
 echo ">>> Step 5: Feature Engineering"
-python src/features/build_features.py
+"$PYTHON_BIN" src/features/build_features.py
 
 echo ""
 echo ">>> Step 6: Train Models & Validate"
-python src/models/train_model.py
+"$PYTHON_BIN" src/models/train_model.py
 
 echo ""
 echo ">>> Step 7: Portfolio Construction & Evaluation"
-python src/portfolio/portfolio.py --method "$PORTFOLIO_METHOD"
+"$PYTHON_BIN" src/portfolio/portfolio.py --method "$PORTFOLIO_METHOD"
 
 echo ""
 echo "============================================================"

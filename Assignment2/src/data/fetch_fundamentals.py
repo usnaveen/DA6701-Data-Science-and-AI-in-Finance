@@ -29,6 +29,7 @@ Notes:
     Set ENABLE_FMP=True below and add your free API key.
 """
 
+import argparse
 import time
 import warnings
 import pandas as pd
@@ -73,6 +74,47 @@ HEADERS = {
 
 # ─── Screener.in Scraper ──────────────────────────────────────────────────────
 
+def coerce_numeric_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Convert mixed-format numeric columns (commas, %, blanks) to floats."""
+    out = df.copy()
+    for col in out.columns:
+        if pd.api.types.is_numeric_dtype(out[col]):
+            continue
+        cleaned = (
+            out[col]
+            .astype(str)
+            .str.replace(",", "", regex=False)
+            .str.replace("%", "", regex=False)
+            .str.replace("\u00a0", " ", regex=False)
+            .str.strip()
+            .replace({"": np.nan, "-": np.nan, "nan": np.nan, "None": np.nan})
+        )
+        out[col] = pd.to_numeric(cleaned, errors="coerce")
+    return out
+
+
+def load_cached_quarterly(cache_paths: list[Path]) -> pd.DataFrame:
+    """
+    Load previously saved quarterly fundamentals (if present), so the pipeline
+    can proceed even when fresh scraping fails.
+    """
+    for path in cache_paths:
+        if not path.exists():
+            continue
+        try:
+            qdf = pd.read_csv(path, index_col=0)
+            qdf.index = pd.to_datetime(qdf.index, errors="coerce")
+            qdf = qdf[~qdf.index.isna()].sort_index()
+            qdf = qdf[~qdf.index.duplicated(keep="last")]
+            qdf = coerce_numeric_columns(qdf)
+            if not qdf.empty and qdf.notna().sum().sum() > 0:
+                print(f"  Loaded cached quarterly data: {path}")
+                return qdf
+        except Exception as e:
+            print(f"  WARNING: Could not load cache {path}: {e}")
+    return pd.DataFrame()
+
+
 def scrape_screener(ticker: str) -> pd.DataFrame:
     """
     Attempt to fetch the consolidated quarterly P&L table from Screener.in.
@@ -100,8 +142,9 @@ def scrape_screener(ticker: str) -> pd.DataFrame:
 
         qdf = qdf.set_index(qdf.columns[0]).T
         qdf.index = pd.to_datetime(qdf.index, errors="coerce")
-        qdf = qdf[~qdf.index.isna()]
-        qdf = qdf.apply(pd.to_numeric, errors="coerce")
+        qdf = qdf[~qdf.index.isna()].sort_index()
+        qdf = qdf[~qdf.index.duplicated(keep="last")]
+        qdf = coerce_numeric_columns(qdf)
 
         # Save raw
         qdf.to_csv(RAW_FUND_DIR / f"{ticker}_quarterly_raw.csv")
@@ -109,7 +152,7 @@ def scrape_screener(ticker: str) -> pd.DataFrame:
 
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 429:
-            print(f"    Rate limited. Sleeping 30 s ...")
+            print("    Rate limited. Sleeping 30 s ...")
             time.sleep(30)
         else:
             print(f"    HTTP error: {e}")
@@ -177,6 +220,7 @@ def align_to_daily(
         return pd.DataFrame()
 
     daily_idx = pd.date_range(start=START_DATE, end=END_DATE, freq="B")
+    quarterly_df = quarterly_df.copy().sort_index()
 
     # Shift each observation forward by the reporting lag
     quarterly_df.index = quarterly_df.index + pd.Timedelta(days=reporting_lag_days)
@@ -192,7 +236,7 @@ def align_to_daily(
 
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
-def main():
+def main(refetch: bool = False):
     print("=" * 60)
     print("Step 3 – Fundamental Data Ingestion")
     print("=" * 60)
@@ -203,11 +247,26 @@ def main():
         print(f"\n{'─'*40}")
         print(f"Ticker: {name}")
 
-        if ENABLE_FMP:
-            raw_q = fetch_fmp_fundamentals(screener_ticker)
-        else:
-            raw_q = scrape_screener(screener_ticker)
-            time.sleep(3)   # polite crawl delay
+        cache_paths = [
+            RAW_FUND_DIR / f"{screener_ticker}_quarterly_raw.csv",
+            RAW_FUND_DIR / f"{name}_quarterly_raw.csv",
+        ]
+
+        # Prefer existing raw cache; fall back to network fetch only if needed.
+        raw_q = pd.DataFrame()
+        if not refetch:
+            raw_q = load_cached_quarterly(cache_paths)
+
+        if raw_q.empty:
+            if ENABLE_FMP:
+                raw_q = fetch_fmp_fundamentals(screener_ticker)
+            else:
+                raw_q = scrape_screener(screener_ticker)
+                time.sleep(3)   # polite crawl delay
+
+        # If fresh fetch failed but old raw exists, use old raw instead of NaN placeholders.
+        if raw_q.empty:
+            raw_q = load_cached_quarterly(cache_paths)
 
         if raw_q.empty:
             print(f"  No data for {name}. Will use placeholder NaNs.")
@@ -221,7 +280,8 @@ def main():
 
         daily_df = align_to_daily(raw_q, name, reporting_lag_days=45)
         all_daily.append(daily_df)
-        print(f"  Aligned to daily: {daily_df.shape}")
+        non_null = int(daily_df.notna().sum().sum())
+        print(f"  Aligned to daily: {daily_df.shape} | non-null cells: {non_null}")
 
     if all_daily:
         fundamentals_panel = pd.concat(all_daily, axis=1)
@@ -233,4 +293,11 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--refetch",
+        action="store_true",
+        help="Ignore cached raw fundamentals and fetch fresh data.",
+    )
+    args = parser.parse_args()
+    main(refetch=args.refetch)

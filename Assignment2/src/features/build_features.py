@@ -39,6 +39,15 @@ warnings.filterwarnings("ignore")
 
 TICKERS = ["RELIANCE", "HDFCBANK", "INFY", "MM", "BHARTIARTL", "HUL"]
 FORWARD_TEST_START = "2025-10-01"
+FUNDAMENTAL_FEATURES = [
+    "PE",
+    "Debt_Equity",
+    "ROE",
+    "EPS",
+    "Revenue",
+    "EBITDA_Margin",
+    "Promoter_Holding",
+]
 
 PROCESSED_DIR = Path("data/processed")
 
@@ -149,7 +158,21 @@ def load_fundamentals() -> pd.DataFrame:
     if not path.exists():
         print("  WARNING: fundamentals_daily.csv not found. Skipping fundamental features.")
         return pd.DataFrame()
-    return pd.read_csv(path, parse_dates=["Date"], index_col="Date")
+    fundamentals = pd.read_csv(path, parse_dates=["Date"])
+    expected = ["Date", "Ticker"] + FUNDAMENTAL_FEATURES
+
+    # Backward compatibility: previous fundamentals format was wide.
+    if "Ticker" not in fundamentals.columns:
+        print("  WARNING: fundamentals_daily.csv is in old wide format. Skipping fundamentals.")
+        return pd.DataFrame()
+
+    for col in FUNDAMENTAL_FEATURES:
+        if col not in fundamentals.columns:
+            fundamentals[col] = np.nan
+
+    fundamentals = fundamentals[expected].copy()
+    fundamentals.sort_values(["Date", "Ticker"], inplace=True)
+    return fundamentals
 
 
 def load_sentiment() -> pd.DataFrame:
@@ -192,9 +215,10 @@ def build_ticker_features(
 
     # Merge fundamentals (already lagged 45 days in fetch_fundamentals.py)
     if not fundamentals.empty:
-        cols = [c for c in fundamentals.columns if c.startswith(ticker_name)]
-        if cols:
-            df = df.join(fundamentals[cols], how="left")
+        fund_ticker = fundamentals[fundamentals["Ticker"] == ticker_name].copy()
+        if not fund_ticker.empty:
+            fund_ticker = fund_ticker.set_index("Date")[FUNDAMENTAL_FEATURES]
+            df = df.join(fund_ticker, how="left")
 
     # Merge sentiment (already lagged 1 day in fetch_sentiment.py)
     if not sentiment.empty:

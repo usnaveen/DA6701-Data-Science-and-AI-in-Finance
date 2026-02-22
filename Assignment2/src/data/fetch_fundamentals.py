@@ -21,6 +21,10 @@ to approximate reporting delay and avoid look-ahead bias).
 
 Usage:
     python fetch_fundamentals.py
+    python fetch_fundamentals.py --refetch
+
+Output schema (data/processed/fundamentals_daily.csv):
+    Date, Ticker, PE, Debt_Equity, ROE, EPS, Revenue, EBITDA_Margin, Promoter_Holding
 
 Notes:
   - If scraping fails (rate limiting, CAPTCHA), manually download the CSV from
@@ -30,6 +34,7 @@ Notes:
 """
 
 import argparse
+import re
 import time
 import warnings
 import pandas as pd
@@ -49,6 +54,26 @@ SCREENER_TICKERS = {
     "MM":         "M&M",
     "BHARTIARTL": "BHARTIARTL",
     "HUL":        "HINDUNILVR",
+}
+
+FUNDAMENTAL_FEATURES = [
+    "PE",
+    "Debt_Equity",
+    "ROE",
+    "EPS",
+    "Revenue",
+    "EBITDA_Margin",
+    "Promoter_Holding",
+]
+
+FUNDAMENTAL_ALIASES = {
+    "PE": ["p e", "pe ratio", "price to earning", "price earnings"],
+    "Debt_Equity": ["debt equity", "debt to equity", "debt / equity"],
+    "ROE": ["roe", "return on equity"],
+    "EPS": ["eps in rs", "eps", "earning per share"],
+    "Revenue": ["revenue", "sales"],
+    "EBITDA_Margin": ["ebitda margin", "opm", "operating margin"],
+    "Promoter_Holding": ["promoter holding", "promoters holding", "promoter"],
 }
 
 # Optional: FinancialModelingPrep free API (250 calls/day)
@@ -91,6 +116,40 @@ def coerce_numeric_columns(df: pd.DataFrame) -> pd.DataFrame:
         )
         out[col] = pd.to_numeric(cleaned, errors="coerce")
     return out
+
+
+def normalize_label(label: str) -> str:
+    text = str(label).replace("\u00a0", " ").strip().lower()
+    text = re.sub(r"[^a-z0-9]+", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
+
+
+def extract_standard_fundamentals(quarterly_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Keep only assignment-mandated fundamental metrics with a fixed schema.
+    Missing metrics remain NaN.
+    """
+    if quarterly_df.empty:
+        return pd.DataFrame(columns=FUNDAMENTAL_FEATURES, index=quarterly_df.index)
+
+    col_map = {col: normalize_label(col) for col in quarterly_df.columns}
+    selected = pd.DataFrame(index=quarterly_df.index)
+
+    for metric in FUNDAMENTAL_FEATURES:
+        aliases = [normalize_label(a) for a in FUNDAMENTAL_ALIASES[metric]]
+        matched_col = None
+        for raw_col, norm_col in col_map.items():
+            if any(alias in norm_col for alias in aliases):
+                matched_col = raw_col
+                break
+
+        if matched_col is not None:
+            selected[metric] = quarterly_df[matched_col]
+        else:
+            selected[metric] = np.nan
+
+    return selected
 
 
 def load_cached_quarterly(cache_paths: list[Path]) -> pd.DataFrame:
@@ -200,7 +259,6 @@ def fetch_fmp_fundamentals(ticker: str) -> pd.DataFrame:
 
 def align_to_daily(
     quarterly_df: pd.DataFrame,
-    ticker_name: str,
     reporting_lag_days: int = 45,
 ) -> pd.DataFrame:
     """
@@ -213,7 +271,6 @@ def align_to_daily(
     Parameters
     ----------
     quarterly_df     : DataFrame with quarterly dates as index
-    ticker_name      : Used to prefix columns
     reporting_lag_days: Days after quarter-end before data is treated as available
     """
     if quarterly_df.empty:
@@ -229,8 +286,6 @@ def align_to_daily(
     daily_df = quarterly_df.reindex(daily_idx, method="ffill")
     daily_df.index.name = "Date"
 
-    # Prefix columns with ticker
-    daily_df.columns = [f"{ticker_name}_{c}" for c in daily_df.columns]
     return daily_df
 
 
@@ -270,22 +325,28 @@ def main(refetch: bool = False):
 
         if raw_q.empty:
             print(f"  No data for {name}. Will use placeholder NaNs.")
-            # Create placeholder so pipeline doesn't break
+            # Keep schema fixed even when one ticker is missing.
             daily_idx = pd.date_range(start=START_DATE, end=END_DATE, freq="B")
-            placeholder = pd.DataFrame(index=daily_idx)
-            for col in ["PE", "DebtEquity", "ROE", "EPS"]:
-                placeholder[f"{name}_{col}"] = np.nan
-            all_daily.append(placeholder)
+            placeholder = pd.DataFrame(index=daily_idx, columns=FUNDAMENTAL_FEATURES, dtype=float)
+            placeholder.index.name = "Date"
+            placeholder["Ticker"] = name
+            all_daily.append(placeholder.reset_index())
             continue
 
-        daily_df = align_to_daily(raw_q, name, reporting_lag_days=45)
+        standardized_q = extract_standard_fundamentals(raw_q)
+        daily_df = align_to_daily(standardized_q, reporting_lag_days=45)
+        daily_df["Ticker"] = name
+        daily_df = daily_df.reset_index()
+        daily_df = daily_df[["Date", "Ticker"] + FUNDAMENTAL_FEATURES]
         all_daily.append(daily_df)
-        non_null = int(daily_df.notna().sum().sum())
+        non_null = int(daily_df[FUNDAMENTAL_FEATURES].notna().sum().sum())
         print(f"  Aligned to daily: {daily_df.shape} | non-null cells: {non_null}")
 
     if all_daily:
-        fundamentals_panel = pd.concat(all_daily, axis=1)
-        fundamentals_panel.to_csv(PROCESSED_DIR / "fundamentals_daily.csv")
+        fundamentals_panel = pd.concat(all_daily, axis=0, ignore_index=True)
+        fundamentals_panel["Date"] = pd.to_datetime(fundamentals_panel["Date"])
+        fundamentals_panel.sort_values(["Date", "Ticker"], inplace=True)
+        fundamentals_panel.to_csv(PROCESSED_DIR / "fundamentals_daily.csv", index=False)
         print(f"\nFundamentals panel saved: {fundamentals_panel.shape}")
         print(f"→ {PROCESSED_DIR}/fundamentals_daily.csv")
 

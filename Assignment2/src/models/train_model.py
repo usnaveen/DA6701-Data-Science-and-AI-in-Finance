@@ -6,8 +6,9 @@ Trains return-prediction models for all 6 Indian equity tickers using:
   • Time-Series Walk-Forward Cross-Validation  (no data leakage)
   • XGBoost + LightGBM (ensemble)
   • Recursive Feature Elimination (RFE) for feature selection
+  • Per-ticker winsorization + median imputation for missing/outlier robustness
   • Regularization (L1/L2 via model hyperparameters)
-  • Evaluation: Sharpe, MAE, RMSE, directional accuracy
+  • Evaluation: Sharpe (risk-free adjusted), MAE, RMSE, directional accuracy
 
 Model architecture
 ------------------
@@ -56,7 +57,7 @@ try:
 except ImportError:
     HAS_LGBM = False
 
-from sklearn.linear_model import Ridge, Lasso
+from sklearn.linear_model import Ridge
 from sklearn.ensemble import GradientBoostingRegressor
 
 warnings.filterwarnings("ignore")
@@ -71,9 +72,12 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 
 N_CV_SPLITS      = 5
 MIN_TRAIN_SIZE   = 252     # ~1 year of trading days minimum
-RFE_N_FEATURES   = 30      # target feature count after RFE
 EXCLUDE_COLS     = ["ticker", "target", "Open", "High", "Low", "Close", "Volume",
                      "Log_Return", "Return", "Ticker","ticker"]
+RISK_FREE_RATE_ANNUAL = 0.065
+APPLY_WINSORIZATION = True
+WINSOR_LOWER_Q = 0.01
+WINSOR_UPPER_Q = 0.99
 
 
 # ─── Model Factory ────────────────────────────────────────────────────────────
@@ -125,11 +129,21 @@ def directional_accuracy(y_true, y_pred):
     return correct.mean()
 
 
-def sharpe_ratio(returns: np.ndarray, freq: int = 252) -> float:
-    """Annualised Sharpe of a return series."""
-    if returns.std() == 0:
+def sharpe_ratio(
+    returns: np.ndarray,
+    freq: int = 252,
+    risk_free_rate_annual: float = RISK_FREE_RATE_ANNUAL,
+) -> float:
+    """Annualised Sharpe ratio using excess returns over risk-free rate."""
+    r = np.asarray(returns, dtype=float)
+    if r.size == 0:
         return 0.0
-    return (returns.mean() / returns.std()) * np.sqrt(freq)
+    rf_daily = risk_free_rate_annual / freq
+    excess = r - rf_daily
+    vol = excess.std()
+    if vol == 0:
+        return 0.0
+    return (excess.mean() / vol) * np.sqrt(freq)
 
 
 def max_drawdown(equity_curve: np.ndarray) -> float:
@@ -145,23 +159,66 @@ def select_features_rfe(X_train, y_train, feature_cols) -> list:
     Use RFECV with Ridge as base estimator (fast) on training data only.
     Returns the selected feature names.
     """
+    if len(feature_cols) <= 10:
+        print(f"    RFE skipped (only {len(feature_cols)} features).")
+        return list(feature_cols)
+
     print("    Running RFE feature selection ...")
     estimator = Ridge(alpha=1.0)
     tscv = TimeSeriesSplit(n_splits=3)
 
     rfe = RFECV(
         estimator=estimator,
-        step=5,                 # remove 5 features per step
+        step=max(1, min(5, len(feature_cols) // 4)),
         cv=tscv,
         scoring="neg_mean_squared_error",
-        min_features_to_select=10,
+        min_features_to_select=min(10, len(feature_cols)),
         # n_jobs=1 avoids process-spawn failures in restricted environments.
         n_jobs=1,
     )
-    rfe.fit(X_train, y_train)
-    selected = [f for f, s in zip(feature_cols, rfe.support_) if s]
-    print(f"    Selected {len(selected)} / {len(feature_cols)} features")
-    return selected
+    try:
+        rfe.fit(X_train, y_train)
+        selected = [f for f, s in zip(feature_cols, rfe.support_) if s]
+        print(f"    Selected {len(selected)} / {len(feature_cols)} features")
+        return selected
+    except Exception as e:
+        print(f"    RFE failed ({e}). Using all features.")
+        return list(feature_cols)
+
+
+def winsorize_and_impute(
+    X_train: pd.DataFrame,
+    X_test: pd.DataFrame,
+) -> tuple[pd.DataFrame, pd.DataFrame, list]:
+    """
+    Per-ticker preprocessing:
+      1) remove columns with no training signal (all-NaN),
+      2) winsorize using train quantile caps,
+      3) median-impute using train medians.
+    """
+    X_tr = X_train.copy()
+    X_te = X_test.copy()
+
+    valid_cols = [c for c in X_tr.columns if X_tr[c].notna().any()]
+    if not valid_cols:
+        return pd.DataFrame(index=X_tr.index), pd.DataFrame(index=X_te.index), []
+
+    X_tr = X_tr[valid_cols]
+    X_te = X_te.reindex(columns=valid_cols) if not X_te.empty else pd.DataFrame(index=X_te.index, columns=valid_cols)
+
+    if APPLY_WINSORIZATION:
+        lower = X_tr.quantile(WINSOR_LOWER_Q)
+        upper = X_tr.quantile(WINSOR_UPPER_Q)
+        X_tr = X_tr.clip(lower=lower, upper=upper, axis=1)
+        if not X_te.empty:
+            X_te = X_te.clip(lower=lower, upper=upper, axis=1)
+
+    medians = X_tr.median(numeric_only=True)
+    X_tr = X_tr.fillna(medians)
+    if not X_te.empty:
+        X_te = X_te.fillna(medians)
+
+    return X_tr, X_te, valid_cols
 
 
 # ─── Walk-Forward Validation ─────────────────────────────────────────────────
@@ -196,7 +253,8 @@ def walk_forward_cv(X: pd.DataFrame, y: pd.Series, n_splits: int = 5) -> dict:
         mae    = mean_absolute_error(y_val, pred)
         rmse   = mean_squared_error(y_val, pred) ** 0.5
         da     = directional_accuracy(y_val.values, pred)
-        sr     = sharpe_ratio(pred * np.sign(y_val.values))  # long when positive, short when negative
+        strategy_returns = pred * np.sign(y_val.values)
+        sr = sharpe_ratio(strategy_returns, risk_free_rate_annual=RISK_FREE_RATE_ANNUAL)
 
         fold_metrics.append({
             "fold": fold + 1,
@@ -237,10 +295,15 @@ def train_ticker(
         and pd.api.types.is_numeric_dtype(tr[c])
     ]
 
-    X_tr = tr[feature_cols].fillna(0)
+    X_tr_raw = tr[feature_cols]
     y_tr = tr["target"]
-    X_te = te[feature_cols].fillna(0) if not te.empty else pd.DataFrame()
+    X_te_raw = te[feature_cols] if not te.empty else pd.DataFrame(index=te.index, columns=feature_cols)
     y_te = te["target"] if not te.empty else pd.Series(dtype=float)
+
+    X_tr, X_te, feature_cols = winsorize_and_impute(X_tr_raw, X_te_raw)
+    if X_tr.empty or not feature_cols:
+        print(f"  No usable features for {ticker} after preprocessing. Skipping.")
+        return {}
 
     print(f"  Train: {X_tr.shape}   Forward-test: {X_te.shape}")
 

@@ -13,10 +13,11 @@ Technical features computed:
   • Volume z-score (21d)
   • 52-week high/low ratio
 
-All features are:
-  1. Lagged appropriately (market features use close price at T → feature at T)
-  2. Target: forward 1-day log return (log(Close_{T+1}/Close_T))
-  3. Robust-scaled (median / IQR) to handle financial outliers
+Temporal alignment:
+  1. Market features use information known at date T.
+  2. Target is next-day log return (shift -1 of 1-day log return).
+  3. Macro and sentiment are expected pre-lagged in their own ingestion scripts.
+  4. Fundamentals are expected lagged by reporting delay in ingestion.
 
 Output
 ------
@@ -31,7 +32,6 @@ import warnings
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from sklearn.preprocessing import RobustScaler
 
 warnings.filterwarnings("ignore")
 
@@ -39,7 +39,7 @@ warnings.filterwarnings("ignore")
 
 TICKERS = ["RELIANCE", "HDFCBANK", "INFY", "MM", "BHARTIARTL", "HUL"]
 FORWARD_TEST_START = "2025-10-01"
-FUNDAMENTAL_FEATURES = [
+FUNDAMENTAL_CORE = [
     "PE",
     "Debt_Equity",
     "ROE",
@@ -47,6 +47,7 @@ FUNDAMENTAL_FEATURES = [
     "Revenue",
     "EBITDA_Margin",
     "Promoter_Holding",
+    "Trailing_EPS_4Q",
 ]
 
 PROCESSED_DIR = Path("data/processed")
@@ -150,7 +151,16 @@ def load_macro() -> pd.DataFrame:
     if not path.exists():
         print("  WARNING: macro_daily.csv not found. Skipping macro features.")
         return pd.DataFrame()
-    return pd.read_csv(path, parse_dates=["Date"], index_col="Date")
+    macro = pd.read_csv(path)
+    if "Date" not in macro.columns and len(macro.columns) > 0:
+        first_col = macro.columns[0]
+        macro = macro.rename(columns={first_col: "Date"})
+    if "Date" not in macro.columns:
+        print("  WARNING: macro_daily.csv missing Date column. Skipping macro features.")
+        return pd.DataFrame()
+    macro["Date"] = pd.to_datetime(macro["Date"], errors="coerce")
+    macro = macro.dropna(subset=["Date"]).set_index("Date").sort_index()
+    return macro
 
 
 def load_fundamentals() -> pd.DataFrame:
@@ -159,18 +169,19 @@ def load_fundamentals() -> pd.DataFrame:
         print("  WARNING: fundamentals_daily.csv not found. Skipping fundamental features.")
         return pd.DataFrame()
     fundamentals = pd.read_csv(path, parse_dates=["Date"])
-    expected = ["Date", "Ticker"] + FUNDAMENTAL_FEATURES
-
-    # Backward compatibility: previous fundamentals format was wide.
     if "Ticker" not in fundamentals.columns:
-        print("  WARNING: fundamentals_daily.csv is in old wide format. Skipping fundamentals.")
+        print("  WARNING: fundamentals_daily.csv missing Ticker column. Skipping fundamentals.")
         return pd.DataFrame()
 
-    for col in FUNDAMENTAL_FEATURES:
+    for col in FUNDAMENTAL_CORE:
         if col not in fundamentals.columns:
             fundamentals[col] = np.nan
 
-    fundamentals = fundamentals[expected].copy()
+    dynamic_cols = [c for c in fundamentals.columns if c not in ["Date", "Ticker"]]
+    wanted_order = [c for c in FUNDAMENTAL_CORE if c in dynamic_cols]
+    rest = sorted([c for c in dynamic_cols if c not in wanted_order])
+    keep_cols = ["Date", "Ticker"] + wanted_order + rest
+    fundamentals = fundamentals[keep_cols].copy()
     fundamentals.sort_values(["Date", "Ticker"], inplace=True)
     return fundamentals
 
@@ -217,7 +228,8 @@ def build_ticker_features(
     if not fundamentals.empty:
         fund_ticker = fundamentals[fundamentals["Ticker"] == ticker_name].copy()
         if not fund_ticker.empty:
-            fund_ticker = fund_ticker.set_index("Date")[FUNDAMENTAL_FEATURES]
+            fund_cols = [c for c in fund_ticker.columns if c not in ["Date", "Ticker"]]
+            fund_ticker = fund_ticker.set_index("Date")[fund_cols]
             df = df.join(fund_ticker, how="left")
 
     # Merge sentiment (already lagged 1 day in fetch_sentiment.py)
@@ -229,28 +241,25 @@ def build_ticker_features(
     return df
 
 
-# ─── Robust Scaling ───────────────────────────────────────────────────────────
-
-EXCLUDE_FROM_SCALING = ["ticker", "target", "Date", "Ticker"]
-
-def scale_features(
-    train_df: pd.DataFrame,
-    test_df: pd.DataFrame,
-) -> tuple[pd.DataFrame, pd.DataFrame, RobustScaler]:
+def validate_target_alignment(full_df: pd.DataFrame):
     """
-    Fit RobustScaler on train, transform both train and test.
-    Returns scaled DataFrames and the fitted scaler.
+    Verify target equals next-day log_ret_1d within each ticker.
     """
-    feature_cols = [c for c in train_df.columns if c not in EXCLUDE_FROM_SCALING]
+    checks = []
+    for ticker, g in full_df.groupby("ticker"):
+        g = g.sort_index()
+        expected = g["log_ret_1d"].shift(-1)
+        mask = expected.notna() & g["target"].notna()
+        if not mask.any():
+            continue
+        delta = (g.loc[mask, "target"] - expected.loc[mask]).abs().max()
+        checks.append((ticker, float(delta)))
 
-    scaler = RobustScaler()
-    train_scaled = train_df.copy()
-    test_scaled  = test_df.copy()
-
-    train_scaled[feature_cols] = scaler.fit_transform(train_df[feature_cols].fillna(0))
-    test_scaled[feature_cols]  = scaler.transform(test_df[feature_cols].fillna(0))
-
-    return train_scaled, test_scaled, scaler
+    if checks:
+        max_delta = max(d for _, d in checks)
+        print(f"Target alignment max abs delta: {max_delta:.12f}")
+        if max_delta > 1e-12:
+            raise ValueError("Target misalignment detected.")
 
 
 # ─── Main ─────────────────────────────────────────────────────────────────────
@@ -285,20 +294,18 @@ def main():
 
     # Drop rows with NaN targets (e.g., last row per ticker)
     full_df = full_df.dropna(subset=["target"])
+    validate_target_alignment(full_df)
 
     # Train / Forward-test split
     train_df = full_df[full_df.index < FORWARD_TEST_START]
     test_df  = full_df[full_df.index >= FORWARD_TEST_START]
 
-    # Scale
-    train_scaled, test_scaled, _ = scale_features(train_df, test_df)
-
     # Save
-    train_scaled.to_parquet(PROCESSED_DIR / "features_train.parquet")
-    test_scaled.to_parquet(PROCESSED_DIR / "features_forward_test.parquet")
+    train_df.to_parquet(PROCESSED_DIR / "features_train.parquet")
+    test_df.to_parquet(PROCESSED_DIR / "features_forward_test.parquet")
 
-    print(f"\nTrain:        {train_scaled.shape}")
-    print(f"Forward-test: {test_scaled.shape}")
+    print(f"\nTrain:        {train_df.shape}")
+    print(f"Forward-test: {test_df.shape}")
     print(f"Saved → {PROCESSED_DIR}/features_train.parquet")
     print(f"Saved → {PROCESSED_DIR}/features_forward_test.parquet")
     print("\nDone.")

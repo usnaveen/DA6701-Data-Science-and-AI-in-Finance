@@ -1,0 +1,28 @@
+# Core data
+yfinance>=0.2.40
+pandas>=2.0.0
+numpy>=1.24.0
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+
+# Feature engineering & ML
+scikit-learn>=1.3.0
+xgboost>=2.0.0
+lightgbm>=4.0.0
+scipy>=1.11.0
+
+# NLP / Sentiment
+transformers>=4.38.0
+torch>=2.0.0
+sentencepiece>=0.1.99     # required by some FinBERT tokenizers
+
+# Plotting & storage
+matplotlib>=3.7.0
+pyarrow>=14.0.0           # for parquet support
+joblib>=1.3.0
+
+# Optional - TextBlob fallback for sentiment
+textblob>=0.17.1
+
+# Dev tools
+tqdm>=4.65.0

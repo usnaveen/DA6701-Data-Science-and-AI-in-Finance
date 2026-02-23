@@ -195,7 +195,9 @@ def walk_forward_cv(X: pd.DataFrame, y: pd.Series, n_splits: int = 5) -> dict:
         mae    = mean_absolute_error(y_val, pred)
         rmse   = mean_squared_error(y_val, pred) ** 0.5
         da     = directional_accuracy(y_val.values, pred)
-        sr     = sharpe_ratio(pred * np.sign(y_val.values))  # long when positive, short when negative
+        # Long-only strategy Sharpe: invest when prediction > 0, else cash
+        strategy_returns = np.where(pred > 0, y_val.values, 0)
+        sr     = sharpe_ratio(strategy_returns)
 
         fold_metrics.append({
             "fold": fold + 1,
@@ -243,8 +245,12 @@ def train_ticker(
 
     print(f"  Train: {X_tr.shape}   Forward-test: {X_te.shape}")
 
-    # Step 1: Feature selection (RFE) on train data only
-    selected_features = select_features_rfe(X_tr.values, y_tr.values, feature_cols)
+    # Step 1: Feature selection (RFE) on first 60% of train data only
+    # Using only partial data avoids look-ahead bias during walk-forward CV
+    rfe_cutoff = int(len(X_tr) * 0.6)
+    selected_features = select_features_rfe(
+        X_tr.values[:rfe_cutoff], y_tr.values[:rfe_cutoff], feature_cols
+    )
     X_tr_sel = X_tr[selected_features]
     X_te_sel = X_te[selected_features] if not X_te.empty else pd.DataFrame()
 

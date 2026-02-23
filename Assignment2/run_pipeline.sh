@@ -15,7 +15,7 @@
 set -e  # exit on error
 
 NEWSAPI_KEY=""
-PORTFOLIO_METHOD="predicted_return"
+PORTFOLIO_METHOD="inverse_vol"
 
 # Parse optional args
 while [[ $# -gt 0 ]]; do

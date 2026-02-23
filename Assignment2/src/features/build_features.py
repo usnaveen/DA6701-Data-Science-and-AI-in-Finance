@@ -91,8 +91,8 @@ def add_technical_features(df: pd.DataFrame) -> pd.DataFrame:
     df["rsi_14"] = compute_rsi(close, 14)
 
     # MACD
-    df["macd"], df["macd_signal"] = compute_macd(close)
-    df["macd_hist"] = df["macd"] - df["macd_signal"]
+    macd_line, signal_line = compute_macd(close)
+    df["macd_hist"] = macd_line - signal_line  # only keep histogram, drop raw MACD/signal
 
     # Bollinger Band width (proxy for volatility regime)
     df["bb_width"] = compute_bollinger_width(close)
@@ -248,10 +248,25 @@ def main():
         return
 
     full_df = pd.concat(all_frames, axis=0).sort_index()
-    print(f"\nFull feature matrix: {full_df.shape}")
+    print(f"\nFull feature matrix (raw): {full_df.shape}")
 
     # Drop rows with NaN targets (e.g., last row per ticker)
     full_df = full_df.dropna(subset=["target"])
+
+    # Drop warmup rows where core technical features are NaN (rolling window warmup)
+    # Only check columns common to all tickers (not ticker-specific fundamental/sentiment cols)
+    core_features = [
+        "log_ret_1d", "log_ret_5d", "log_ret_10d", "log_ret_21d",
+        "vol_5d", "vol_21d", "rsi_14", "macd_hist", "bb_width",
+        "vol_zscore", "hi_ratio", "lo_ratio", "mom_21d", "mom_63d", "atr_norm",
+    ]
+    core_present = [c for c in core_features if c in full_df.columns]
+    if core_present:
+        nan_frac = full_df[core_present].isna().mean(axis=1)
+        before = len(full_df)
+        full_df = full_df[nan_frac < 0.3]  # drop rows where >30% of core features are NaN
+        print(f"  Dropped {before - len(full_df)} NaN-heavy warmup rows")
+    print(f"  Clean feature matrix: {full_df.shape}")
 
     # Train / Forward-test split
     train_df = full_df[full_df.index < FORWARD_TEST_START]

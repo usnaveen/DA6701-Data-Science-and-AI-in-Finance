@@ -43,11 +43,30 @@ RISK_FREE_RATE    = 0.065 / 252   # ~6.5% annualised RBI repo rate, daily
 
 # ─── Load Data ────────────────────────────────────────────────────────────────
 
-def load_predictions() -> pd.DataFrame:
+def load_predictions(min_cv_da: float = 0.50) -> pd.DataFrame:
     path = OUTPUT_DIR / "predictions_fwd_test.csv"
-    if not path.exists():
-        raise FileNotFoundError("Run train_model.py first.")
-    return pd.read_csv(path, parse_dates=["Date"], index_col="Date")
+    cv_path = OUTPUT_DIR / "cv_scores.csv"
+
+    if not path.exists() or not cv_path.exists():
+        raise FileNotFoundError("Run train_model.py first to generate predictions and cv_scores.")
+
+    preds = pd.read_csv(path, parse_dates=["Date"], index_col="Date")
+    cv_scores = pd.read_csv(cv_path)
+
+    # Calculate mean Directional Accuracy per ticker from CV folds
+    cv_da = cv_scores.groupby("ticker")["DirectionalAccuracy"].mean()
+
+    # Find tickers that failed to beat random chance (> 0.50) in CV
+    weak_tickers = cv_da[cv_da < min_cv_da].index.tolist()
+
+    if weak_tickers:
+        print(f"\nExcluding {len(weak_tickers)} tickers due to CV DA < {min_cv_da}: {weak_tickers}")
+        # Set all predictions to 0 for weak tickers so they get 0 weight
+        for ticker in weak_tickers:
+            if ticker in preds.columns:
+                preds[ticker] = 0.0
+
+    return preds
 
 
 def load_actual_returns() -> pd.DataFrame:
@@ -187,9 +206,12 @@ def compute_metrics(portfolio: pd.DataFrame, actuals: pd.DataFrame) -> dict:
     r = portfolio["portfolio_return"].values
     cum = (1 + portfolio["portfolio_return"]).cumprod().values
 
-    # Sharpe ratio
+    # Sharpe ratio (excess return over risk-free)
     excess = r - RISK_FREE_RATE
-    sharpe = (excess.mean() / (excess.std() + 1e-10)) * np.sqrt(252)
+    sharpe_excess = (excess.mean() / (excess.std() + 1e-10)) * np.sqrt(252)
+
+    # Raw Sharpe ratio (no risk-free subtraction — useful for short evaluation windows)
+    sharpe_raw = (r.mean() / (r.std() + 1e-10)) * np.sqrt(252) if r.std() > 0 else 0.0
 
     # Max drawdown
     running_max = np.maximum.accumulate(cum)
@@ -209,7 +231,8 @@ def compute_metrics(portfolio: pd.DataFrame, actuals: pd.DataFrame) -> dict:
     port_hit = (np.sign(r[r != 0]) == 1).mean()   # days we were long and positive
 
     return {
-        "Sharpe Ratio":         round(sharpe, 4),
+        "Sharpe Ratio":         round(sharpe_excess, 4),
+        "Sharpe Ratio (Raw)":   round(sharpe_raw, 4),
         "Max Drawdown":         round(mdd * 100, 2),
         "Hit Ratio (Portfolio)": round(port_hit, 4),
         "Hit Ratio per Ticker": {k: round(v, 4) for k, v in hit_ticker.items()},
@@ -283,12 +306,12 @@ def plot_weights_heatmap(portfolio: pd.DataFrame, method: str):
 
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
-def main(method: str = "predicted_return"):
+def main(method: str = "inverse_vol"):
     print("=" * 60)
     print(f"Step 7 – Portfolio Construction ({method})")
     print("=" * 60)
 
-    preds        = load_predictions()
+    preds        = load_predictions(min_cv_da=0.50)
     fwd_actuals  = load_actual_returns()
 
     # Load training-period actuals for vol/covariance estimation
@@ -312,6 +335,7 @@ def main(method: str = "predicted_return"):
     print("PORTFOLIO PERFORMANCE METRICS")
     print("=" * 50)
     print(f"  Sharpe Ratio:          {metrics['Sharpe Ratio']}")
+    print(f"  Sharpe Ratio (Raw):    {metrics['Sharpe Ratio (Raw)']}")
     print(f"  Max Drawdown:          {metrics['Max Drawdown']}%")
     print(f"  Hit Ratio (Portfolio): {metrics['Hit Ratio (Portfolio)']:.2%}")
     print(f"  Cumulative Return:     {metrics['Cumulative Return (%)']}%")
@@ -338,7 +362,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--method",
-        default="predicted_return",
+        default="inverse_vol",
         choices=["predicted_return", "equal", "inverse_vol", "mean_variance"],
         help="Portfolio weighting method",
     )

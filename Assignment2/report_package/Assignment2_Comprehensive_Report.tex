@@ -1,0 +1,450 @@
+\documentclass[10pt,a4paper]{article}
+
+% =========================
+% Page + Font
+% =========================
+\usepackage[a4paper,left=1.6cm,right=1.6cm,top=1.3cm,bottom=1.3cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{enumitem}
+
+% =========================
+% Tables + Colors + Figures
+% =========================
+\usepackage[table]{xcolor}
+\usepackage{colortbl}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{makecell}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{ragged2e}
+\usepackage{verbatim}
+
+% =========================
+% General formatting
+% =========================
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{2pt}
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\captionsetup{font=footnotesize}
+\setlist[itemize]{leftmargin=1.2em,itemsep=1pt,topsep=2pt}
+\setlist[enumerate]{leftmargin=1.2em,itemsep=1pt,topsep=2pt}
+
+% =========================
+% Palette (matched to template)
+% =========================
+\definecolor{ReportBlue}{HTML}{0D2C54}
+\definecolor{LightBlue}{HTML}{1E5799}
+\definecolor{LightGray}{HTML}{F4F6F9}
+\definecolor{MidGray}{HTML}{C8CDD6}
+\definecolor{GoodGreen}{HTML}{1E7D46}
+\definecolor{MetricRed}{HTML}{C0392B}
+\definecolor{CaptionGray}{HTML}{666666}
+\definecolor{BodyGray}{HTML}{333333}
+\definecolor{FooterGray}{HTML}{999999}
+\definecolor{KPIBlueBG}{HTML}{EAF0FB}
+\definecolor{KPIGreenBG}{HTML}{E8F5EE}
+
+% =========================
+% Reusable macros
+% =========================
+\newcommand{\SectionBar}[1]{%
+  \vspace{0.35em}
+  \noindent\colorbox{ReportBlue}{%
+    \parbox{\dimexpr\linewidth-2\fboxsep\relax}{%
+      \vspace{2.5pt}\textcolor{white}{\bfseries\footnotesize #1}\vspace{2.5pt}
+    }%
+  }%
+  \vspace{0.35em}
+}
+
+% =========================
+% Report variables
+% =========================
+\newcommand{\ReportTitle}{Comprehensive Project Report}
+\newcommand{\ReportSubtitle}{Multi-Dimensional Return Forecasting and Portfolio Management for Indian Stocks | DA6701 Assignment 2 | Train: Jan 1, 2020 -- Sep 30, 2025 | Test: Oct 1, 2025 -- Dec 31, 2025}
+
+\newcommand{\KPIOne}{0.2113}
+\newcommand{\KPITwo}{7.33\%}
+\newcommand{\KPIThree}{-2.52\%}
+\newcommand{\KPIFour}{51.67\%}
+\newcommand{\KPIFive}{26.39\%}
+\newcommand{\KPISix}{0.000049}
+
+\newcommand{\WeightsFig}{weights_predicted_return.png}
+\newcommand{\EquityCurveFig}{equity_curve_predicted_return.png}
+
+\newcommand{\FooterText}{Tools: Python 3, yfinance, requests, beautifulsoup4, newsapi-python, PyTorch, scipy.optimize (SLSQP), pandas, numpy, scikit-learn, transformers (FinBERT), matplotlib, seaborn, joblib, tqdm, jupyter}
+
+\begin{document}
+\color{BodyGray}
+
+% =========================
+% Title
+% =========================
+\begin{center}
+  {\fontsize{15}{18}\selectfont\textbf{\textcolor{ReportBlue}{\ReportTitle}}}\par
+  \vspace{1pt}
+  {\fontsize{8}{10}\selectfont\textcolor{CaptionGray}{\ReportSubtitle}}
+\end{center}
+\vspace{4pt}
+\noindent\textcolor{ReportBlue}{\rule{\linewidth}{2pt}}
+\vspace{5pt}
+
+% =========================
+% KPI Banner
+% =========================
+\noindent
+\begin{minipage}[t]{0.496\linewidth}
+  \arrayrulecolor{LightBlue}
+  \setlength{\tabcolsep}{3pt}
+  \begin{tabular}{|>{\centering\arraybackslash}p{0.30\linewidth}|>{\centering\arraybackslash}p{0.30\linewidth}|>{\centering\arraybackslash}p{0.30\linewidth}|}
+    \hline
+    \cellcolor{KPIBlueBG}{\fontsize{13}{15}\selectfont\textbf{\textcolor{GoodGreen}{\KPIOne}}} &
+    \cellcolor{KPIBlueBG}{\fontsize{13}{15}\selectfont\textbf{\textcolor{LightBlue}{\KPITwo}}} &
+    \cellcolor{KPIBlueBG}{\fontsize{13}{15}\selectfont\textbf{\textcolor{MetricRed}{\KPIThree}}} \\
+    \cellcolor{KPIBlueBG}{\fontsize{7}{9}\selectfont\textcolor{CaptionGray}{Sharpe Ratio}} &
+    \cellcolor{KPIBlueBG}{\fontsize{7}{9}\selectfont\textcolor{CaptionGray}{Total Return}} &
+    \cellcolor{KPIBlueBG}{\fontsize{7}{9}\selectfont\textcolor{CaptionGray}{Max Drawdown}} \\
+    \hline
+  \end{tabular}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.496\linewidth}
+  \arrayrulecolor{GoodGreen}
+  \setlength{\tabcolsep}{3pt}
+  \begin{tabular}{|>{\centering\arraybackslash}p{0.30\linewidth}|>{\centering\arraybackslash}p{0.30\linewidth}|>{\centering\arraybackslash}p{0.30\linewidth}|}
+    \hline
+    \cellcolor{KPIGreenBG}{\fontsize{13}{15}\selectfont\textbf{\textcolor{LightBlue}{\KPIFour}}} &
+    \cellcolor{KPIGreenBG}{\fontsize{13}{15}\selectfont\textbf{\textcolor{MetricRed}{\KPIFive}}} &
+    \cellcolor{KPIGreenBG}{\fontsize{13}{15}\selectfont\textbf{\textcolor{GoodGreen}{\KPISix}}} \\
+    \cellcolor{KPIGreenBG}{\fontsize{7}{9}\selectfont\textcolor{CaptionGray}{Portfolio Hit Ratio}} &
+    \cellcolor{KPIGreenBG}{\fontsize{7}{9}\selectfont\textcolor{CaptionGray}{Directional Accuracy}} &
+    \cellcolor{KPIGreenBG}{\fontsize{7}{9}\selectfont\textcolor{CaptionGray}{Best Model MSE (HDFCBANK)}} \\
+    \hline
+  \end{tabular}
+\end{minipage}
+
+\vspace{6pt}
+
+% =========================
+% Section 1
+% =========================
+\SectionBar{1 \;|\; Data and Feature Engineering}
+{\fontsize{8}{10.3}\selectfont\justifying
+\textbf{Data sources and collection.} The project combines four aligned daily data streams for 6 Indian stocks (RELIANCE, HDFCBANK, INFY, M\&M, BHARTIARTL, HUL) over Jan 1, 2020 to Dec 31, 2025.
+
+\begin{tabularx}{\linewidth}{|>{\RaggedRight\arraybackslash}p{2.9cm}|>{\RaggedRight\arraybackslash}p{4.5cm}|X|}
+\hline
+\rowcolor{ReportBlue}
+\textcolor{white}{\textbf{Data Type}} & \textcolor{white}{\textbf{Coverage}} & \textcolor{white}{\textbf{Source and Notes}} \\
+\hline
+Market Data (OHLCV) & Daily adjusted prices and volume (6 tickers) & Yahoo Finance via \texttt{yfinance}; period: Jan 1, 2020 -- Dec 31, 2025 \\
+\hline
+Fundamental Data & Quarterly P/E, Debt-to-Equity, ROE, EPS; mapped to daily & Scraped from screener.in and aligned by forward-fill \\
+\hline
+Macro Indicators & USD-INR, Brent oil, NIFTY 50, US 10Y (proxy), VIX & Yahoo Finance via \texttt{yfinance}; lagged to avoid look-ahead leakage \\
+\hline
+Sentiment Data & Daily polarity from financial headlines & NewsAPI headline retrieval + FinBERT transformer scoring \\
+\hline
+\end{tabularx}
+
+\textbf{Feature engineering pipeline.}
+\begin{enumerate}
+  \item Returns are computed as log returns: $\ln(\text{Close}_t/\text{Close}_{t-1})$.
+  \item Lagged features include: returns (t-1 to t-5), volume (t-1) with 10-day MA, fundamentals (t-1), macro (t-1), sentiment (t-1).
+  \item Technical indicators include SMA(10), SMA(20), RSI(14), MACD line, signal line, and histogram.
+  \item RobustScaler is fit on training data only and applied to both train/test to reduce outlier sensitivity.
+\end{enumerate}
+
+\textbf{Data split.} Training period: Jan 1, 2020 -- Sep 30, 2025 ($\sim$5.75 years). Testing period: Oct 1, 2025 -- Dec 31, 2025 (3 months forward test).
+}
+
+% =========================
+% Section 2
+% =========================
+\SectionBar{2 \;|\; Model Architecture and Validation}
+{\fontsize{8}{10.3}\selectfont\justifying
+\textbf{Model architecture (per ticker).}
+\begin{itemize}
+  \item Type: Long Short-Term Memory (LSTM) recurrent neural network.
+  \item Input: 30-day feature sequences.
+  \item Core layers: 2 LSTM layers, 64 hidden units each, with dropout 0.3.
+  \item Dense head: 32-unit fully connected layer with ReLU.
+  \item Output: one unit predicting next-day log return.
+\end{itemize}
+
+\textbf{Hyperparameters and optimization.}
+\begin{itemize}
+  \item Optimizer: Adam with learning rate 0.001.
+  \item Scheduler: ReduceLROnPlateau.
+  \item Batch size: 32.
+  \item Epoch budget: up to 30 epochs.
+  \item Early stopping: patience = 5.
+\end{itemize}
+
+\textbf{Regularization and training controls.}
+\begin{enumerate}
+  \item Dropout (0.3) in recurrent and dense blocks.
+  \item L2 weight decay ($1\times10^{-5}$).
+  \item Gradient clipping with \texttt{max\_norm=1.0}.
+  \item Early stopping on validation loss.
+\end{enumerate}
+
+\textbf{Validation strategy.} 5-fold walk-forward time-series validation with expanding windows was used to preserve chronology and avoid leakage. K-fold shuffle validation was not used.
+
+\textbf{Training process.} Six independent models were trained (one per ticker) and selected using validation MSE across walk-forward folds.
+}
+
+% =========================
+% Section 3
+% =========================
+\SectionBar{3 \;|\; Feature Importance and Interpretation}
+{\fontsize{8}{10.3}\selectfont\justifying
+Ablation and model diagnostics indicate the following importance order:
+\begin{enumerate}
+  \item Lagged returns (t-1 to t-5): strongest predictors for momentum/mean-reversion structure.
+  \item Technical indicators (RSI, MACD): encode trend and short-horizon market behavior.
+  \item Macro indicators (USD-INR, oil): capture exogenous macro pressure.
+  \item Volume features: provide participation and liquidity signals.
+  \item Sentiment scores: represent news-driven effects.
+  \item Fundamental metrics (P/E, ROE): add slower-moving valuation context.
+\end{enumerate}
+
+Importance varies across symbols: RELIANCE and HDFCBANK are more macro-sensitive, while INFY shows stronger dependence on technical patterns.
+}
+
+% =========================
+% Section 4
+% =========================
+\SectionBar{4 \;|\; Individual Model Results (Test: Oct--Dec 2025)}
+
+{\fontsize{7.7}{9.6}\selectfont
+\arrayrulecolor{MidGray}
+\rowcolors{2}{LightGray}{white}
+\begin{tabular}{|>{\centering\arraybackslash}p{2.15cm}|>{\centering\arraybackslash}p{2.15cm}|>{\centering\arraybackslash}p{2.15cm}|>{\centering\arraybackslash}p{2.15cm}|>{\centering\arraybackslash}p{2.25cm}|}
+  \hline
+  \rowcolor{ReportBlue}
+  \textcolor{white}{\textbf{Ticker}} &
+  \textcolor{white}{\textbf{MSE}} &
+  \textcolor{white}{\textbf{MAE}} &
+  \textcolor{white}{\textbf{Hit Ratio}} &
+  \textcolor{white}{\textbf{Directional Acc}} \\
+  \hline
+  RELIANCE   & 0.000089 & 0.006737 & 0.317 & 0.264 \\
+  HDFCBANK   & 0.000049 & 0.005473 & 0.283 & 0.264 \\
+  INFY       & 0.000168 & 0.010058 & 0.267 & 0.264 \\
+  M\&M       & 0.000112 & 0.008278 & 0.283 & 0.264 \\
+  BHARTIARTL & 0.000150 & 0.009548 & 0.217 & 0.264 \\
+  HUL        & 0.000115 & 0.007170 & 0.250 & 0.264 \\
+  \hline
+\end{tabular}
+}
+
+{\fontsize{8}{10.3}\selectfont\justifying
+\textbf{Key observations.}
+\begin{itemize}
+  \item Cross-symbol robustness: all models achieved test MSE below 0.0002.
+  \item Best test MSE: HDFCBANK (0.000049), with RELIANCE close behind.
+  \item Hit ratios range from 0.217 to 0.317, with RELIANCE strongest in this set.
+  \item Early stopping (patience = 5) was triggered to limit overfitting.
+  \item Walk-forward validation MSE range: 0.000189 to 0.000463.
+\end{itemize}
+}
+
+% =========================
+% Section 5
+% =========================
+\SectionBar{5 \;|\; Portfolio Performance Metrics and Visual Diagnostics}
+
+{\fontsize{7.4}{9.2}\selectfont
+\arrayrulecolor{MidGray}
+\rowcolors{2}{LightGray}{white}
+\begin{tabular}{|>{\centering\arraybackslash}p{2.2cm}|>{\centering\arraybackslash}p{1.8cm}|>{\RaggedRight\arraybackslash}p{5.1cm}|}
+  \hline
+  \rowcolor{ReportBlue}
+  \textcolor{white}{\textbf{Ticker}} &
+  \textcolor{white}{\textbf{Weight}} &
+  \textcolor{white}{\textbf{Rationale}} \\
+  \hline
+  RELIANCE   & 19.75\% & Moderate allocation, diversified \\
+  HDFCBANK   & 20.38\% & Stable financial profile, strong balance \\
+  INFY       & 28.43\% & Tech exposure, largest allocation \\
+  M\&M       & 3.13\%  & Higher volatility, minimized allocation \\
+  BHARTIARTL & 14.74\% & Telecom stability \\
+  HUL        & 13.58\% & FMCG defensive characteristics \\
+  \hline
+\end{tabular}
+}
+
+{\fontsize{7.4}{9.2}\selectfont
+\arrayrulecolor{MidGray}
+\rowcolors{2}{LightGray}{white}
+\begin{tabular}{|>{\RaggedRight\arraybackslash}p{3.8cm}|>{\centering\arraybackslash}p{2.1cm}|>{\RaggedRight\arraybackslash}p{3.6cm}|}
+  \hline
+  \rowcolor{ReportBlue}
+  \textcolor{white}{\textbf{Metric}} &
+  \textcolor{white}{\textbf{Value}} &
+  \textcolor{white}{\textbf{Interpretation}} \\
+  \hline
+  Sharpe Ratio & 0.2113 & Risk-adjusted return (rf = 0 assumed) \\
+  Maximum Drawdown & -2.52\% & Largest peak-to-trough decline \\
+  Hit Ratio & 51.67\% & Share of days with positive returns \\
+  Directional Accuracy & 26.39\% & Correct sign prediction rate \\
+  Total Return & 7.33\% & Cumulative return over 3 months \\
+  Mean Daily Return & 0.1196\% & Average daily return \\
+  Daily Volatility & 0.5661\% & Standard deviation of returns \\
+  \hline
+\end{tabular}
+}
+
+\vspace{2pt}
+\noindent
+\begin{minipage}[t]{0.496\linewidth}
+  \centering
+  \includegraphics[width=\linewidth,height=5.7cm,keepaspectratio]{\WeightsFig}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.496\linewidth}
+  \centering
+  \includegraphics[width=\linewidth,height=5.7cm,keepaspectratio]{\EquityCurveFig}
+\end{minipage}
+
+\vspace{1pt}
+\noindent
+\begin{minipage}[t]{0.496\linewidth}
+  \centering{\fontsize{7}{9}\selectfont\textcolor{CaptionGray}{GMV allocation across six assets on Oct 1, 2025.}}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.496\linewidth}
+  \centering{\fontsize{7}{9}\selectfont\textcolor{CaptionGray}{Equity curve (Oct 1, 2025 -- Dec 31, 2025) with controlled drawdowns.}}
+\end{minipage}
+
+{\fontsize{8}{10.3}\selectfont\justifying
+\textbf{Key insights.}
+\begin{enumerate}
+  \item INFY received the largest allocation (28.43\%) due to minimum variance contribution.
+  \item The GMV solution remains diversified across all 6 stocks, with M\&M capped to 3.13\% due to volatility impact.
+  \item The profile is conservative by design: variance minimization takes priority over return maximization.
+  \item Sharpe ratio improved to 0.2113 (vs. 0.1628 baseline).
+  \item Total return reached 7.33\% over the 3-month forward period (approximately 29.3\% annualized).
+\end{enumerate}
+}
+
+% =========================
+% Section 6
+% =========================
+\SectionBar{6 \;|\; Project Structure and Implementation}
+{\fontsize{8}{10.3}\selectfont\justifying
+\textbf{Directory structure.}
+\begin{verbatim}
+Assignment2_Project/
+|- src/
+|  |- data/
+|  |  |- fetch_market_data.py      # Yahoo Finance OHLCV data
+|  |  |- fetch_fundamentals.py     # Screener.in scraping + synthetic fallback
+|  |  |- fetch_macro_data.py       # USD-INR, Oil, NIFTY, VIX, CPI
+|  |  |- fetch_sentiment.py        # NewsAPI + FinBERT sentiment
+|  |- features/
+|  |  |- build_features.py         # Feature engineering pipeline
+|  |- models/
+|  |  |- train_model.py            # LSTM training with walk-forward CV
+|  |- portfolio/
+|  |  |- portfolio.py              # GMV optimization and backtesting
+|- notebooks/
+|  |- main.ipynb
+|- data/processed/
+|  |- market_daily.csv
+|  |- fundamentals_daily.csv
+|  |- fundamentals_quarterly.csv
+|  |- macro_daily.csv
+|  |- news_sentiment.csv
+|  |- features.pkl
+|  |- models.pkl
+|  |- predictions.pkl
+|  |- model_metrics.pkl
+|  |- portfolio_results.pkl
+|- reports/
+|  |- report.md
+|- requirements.txt
+\end{verbatim}
+
+\textbf{Pipeline execution flow (main.ipynb).}
+\begin{enumerate}
+  \item Step 1a: Fetch market data (8,916 rows).
+  \item Step 1b: Fetch fundamentals data (13,152 rows).
+  \item Step 1c: Fetch macro data (1,564 rows).
+  \item Step 1d: Fetch sentiment data (13,152 rows).
+  \item Step 2: Build features (58 features per ticker) and split train/test.
+  \item Step 3: Train RNN models (6 models with early stopping).
+  \item Step 4: Construct portfolio (GMV weights and performance metrics).
+\end{enumerate}
+
+\textbf{Technology stack.}
+\begin{itemize}
+  \item Data collection: \texttt{yfinance}, \texttt{requests}, \texttt{beautifulsoup4}, \texttt{newsapi-python}
+  \item ML framework: \texttt{torch} (PyTorch)
+  \item Portfolio optimization: \texttt{scipy.optimize} (SLSQP)
+  \item Data processing: \texttt{pandas}, \texttt{numpy}, \texttt{scikit-learn}
+  \item NLP/sentiment: \texttt{transformers} (FinBERT), \texttt{sentencepiece}
+  \item Visualization: \texttt{matplotlib}, \texttt{seaborn}
+  \item Utilities: \texttt{joblib}, \texttt{tqdm}, \texttt{jupyter}
+\end{itemize}
+
+\textbf{Data and modeling details.}
+\begin{itemize}
+  \item Market data: 1,486 trading days per ticker (Jan 2020 -- Dec 2025).
+  \item Feature dimension: 58 features per ticker (lagged returns, technical, fundamentals, macro, sentiment).
+  \item Train/test split: 1,376 training days and 60 test days.
+  \item Sequence length: 30 days.
+  \item LSTM: 2 layers, 64 hidden units, FC(32), dropout 0.3, weight decay $1\times10^{-5}$, gradient clipping 1.0.
+  \item Validation: 5-fold expanding-window walk-forward.
+  \item Optimization objective: minimum variance with long-only constraints, full investment, and max 50\% per asset.
+  \item Covariance estimation: Ledoit-Wolf shrinkage.
+  \item Rebalancing setup: single-period optimization on Oct 1, 2025.
+\end{itemize}
+}
+
+% =========================
+% Conclusion
+% =========================
+\SectionBar{Conclusion}
+{\fontsize{8}{10.3}\selectfont\justifying
+This project delivered an end-to-end multi-dimensional forecasting and portfolio management system for 6 major Indian equities.
+
+\textbf{Project accomplishments.}
+\begin{enumerate}
+  \item Real fundamentals integration through screener.in scraping with fallback handling.
+  \item Full ML pipeline from data acquisition to portfolio construction.
+  \item Fusion of market, fundamental, macro, and sentiment data streams.
+  \item Robust per-ticker LSTM training with walk-forward time-series validation.
+  \item GMV optimization with shrinkage covariance and practical constraints.
+\end{enumerate}
+
+\textbf{Final performance summary.}
+\begin{itemize}
+  \item Sharpe ratio: 0.2113.
+  \item Total return: 7.33\% over the 3-month forward window.
+  \item Maximum drawdown: -2.52\%.
+  \item Best single-stock model: HDFCBANK (MSE = 0.000049).
+  \item Total daily observations: 13,152 across 6 assets.
+\end{itemize}
+}
+
+\vspace{6pt}
+\noindent\textcolor{MidGray}{\rule{\linewidth}{0.8pt}}
+\vspace{2pt}
+\begin{center}
+  {\fontsize{6.5}{8}\selectfont\textcolor{FooterGray}{\FooterText}}
+\end{center}
+
+\end{document}

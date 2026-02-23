@@ -35,35 +35,35 @@ echo ""
 cd "$(dirname "$0")"
 
 echo ">>> Step 1: Fetch Market Data (OHLCV)"
-python src/data/fetch_market_data.py
+python3 src/data/fetch_market_data.py
 
 echo ""
 echo ">>> Step 2: Fetch Macro Indicators"
-python src/data/fetch_macro_data.py
+python3 src/data/fetch_macro_data.py
 
 echo ""
 echo ">>> Step 3: Fetch Fundamental Data"
-python src/data/fetch_fundamentals.py
+python3 src/data/fetch_fundamentals.py
 
 echo ""
 echo ">>> Step 4: Fetch News Sentiment"
 if [[ -n "$NEWSAPI_KEY" ]]; then
-    python src/data/fetch_sentiment.py --newsapi-key "$NEWSAPI_KEY"
+    python3 src/data/fetch_sentiment.py --newsapi-key "$NEWSAPI_KEY"
 else
-    python src/data/fetch_sentiment.py
+    python3 src/data/fetch_sentiment.py
 fi
 
 echo ""
 echo ">>> Step 5: Feature Engineering"
-python src/features/build_features.py
+python3 src/features/build_features.py
 
 echo ""
 echo ">>> Step 6: Train Models & Validate"
-python src/models/train_model.py
+python3 src/models/train_model.py
 
 echo ""
 echo ">>> Step 7: Portfolio Construction & Evaluation"
-python src/portfolio/portfolio.py --method "$PORTFOLIO_METHOD"
+python3 src/portfolio/portfolio.py --method "$PORTFOLIO_METHOD"
 
 echo ""
 echo "============================================================"

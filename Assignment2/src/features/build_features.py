@@ -141,7 +141,7 @@ def load_macro() -> pd.DataFrame:
     if not path.exists():
         print("  WARNING: macro_daily.csv not found. Skipping macro features.")
         return pd.DataFrame()
-    return pd.read_csv(path, parse_dates=["Date"], index_col="Date")
+    return pd.read_csv(path, parse_dates=[0], index_col=0)
 
 
 def load_fundamentals() -> pd.DataFrame:

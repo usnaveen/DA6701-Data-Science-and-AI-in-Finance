@@ -1,0 +1,34 @@
+
+REFLECTION — Group B: Structural Regularization via HRP
+========================================================
+
+Hierarchical Risk Parity (HRP) represents a fundamentally different approach to 
+regularization compared to Ledoit-Wolf shrinkage. While LW operates on the numerical 
+entries of the covariance matrix — pulling extreme eigenvalues toward a structured 
+target — HRP regularizes by respecting the *topology* of risk relationships discovered 
+through hierarchical clustering.
+
+The dendrogram reveals meaningful market structure that a flat covariance matrix obscures. 
+In our 12-stock NSE universe, the clustering algorithm independently recovered groups 
+that align with intuitive economic linkages: commodity-linked cyclicals (metals), 
+rate-sensitive financials (private banks), export-oriented technology companies, and 
+domestic consumption defensives. Crucially, these groupings emerged purely from return 
+co-movement patterns — no sector labels were provided to the algorithm.
+
+The practical consequence is significant. Standard Mean-Variance Optimization (MVO) 
+treats all pairwise correlations as equally reliable, leading to concentrated positions 
+that exploit estimation noise. HRP, by contrast, allocates risk hierarchically: first 
+across structurally distinct clusters, then within each cluster. This produces portfolios 
+that are more robust to correlation estimation errors because the allocation respects 
+the multi-scale nature of market dependencies.
+
+Our turnover analysis confirms this: HRP portfolios require less frequent and less 
+dramatic rebalancing compared to standard MVO. This is because the hierarchical structure 
+acts as a natural regularizer — small perturbations in correlation estimates do not 
+propagate to large weight changes as they do in unconstrained MVO.
+
+In summary, regularization is a prerequisite for real-world quantitative trading because 
+raw sample statistics are unreliable in high-dimensional settings. While LW addresses 
+this by stabilizing the covariance matrix numerically, HRP addresses it structurally — 
+building the portfolio on a scaffold of discovered risk hierarchies rather than trusting 
+a single point estimate of the full covariance.

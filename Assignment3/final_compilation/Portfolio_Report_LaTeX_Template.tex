@@ -1,0 +1,226 @@
+\documentclass[10pt,a4paper]{article}
+
+% =========================
+% Page + Font
+% =========================
+\usepackage[a4paper,left=1.6cm,right=1.6cm,top=1.3cm,bottom=1.3cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{microtype}
+\usepackage{setspace}
+
+% =========================
+% Tables + Colors + Figures
+% =========================
+\usepackage[table]{xcolor}
+\usepackage{colortbl}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{makecell}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{ragged2e}
+
+% =========================
+% General formatting
+% =========================
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\captionsetup{font=footnotesize}
+
+% =========================
+% Palette (matched to ReportLab design)
+% =========================
+\definecolor{ReportBlue}{HTML}{0D2C54}
+\definecolor{LightBlue}{HTML}{1E5799}
+\definecolor{LightGray}{HTML}{F4F6F9}
+\definecolor{MidGray}{HTML}{C8CDD6}
+\definecolor{GoodGreen}{HTML}{1E7D46}
+\definecolor{MetricRed}{HTML}{C0392B}
+\definecolor{CaptionGray}{HTML}{666666}
+\definecolor{BodyGray}{HTML}{333333}
+\definecolor{FooterGray}{HTML}{999999}
+\definecolor{KPIBlueBG}{HTML}{EAF0FB}
+\definecolor{KPIGreenBG}{HTML}{E8F5EE}
+
+% =========================
+% Reusable macros
+% =========================
+\newcommand{\SectionBar}[1]{%
+  \vspace{0.25em}
+  \noindent\colorbox{ReportBlue}{%
+    \parbox{\dimexpr\linewidth-2\fboxsep\relax}{%
+      \vspace{2.5pt}\textcolor{white}{\bfseries\footnotesize #1}\vspace{2.5pt}
+    }%
+  }%
+  \vspace{0.35em}
+}
+
+% =========================
+% Template variables (EDIT THESE)
+% =========================
+\newcommand{\ReportTitle}{Portfolio Optimization - Report}
+\newcommand{\ReportSubtitle}{DA6701 - Assignment I | Modern Portfolio Theory | NSE 30-Stock Universe | RF = 6.5\% | Long-Only | Monte Carlo: 20,000 simulations}
+
+% KPI values
+\newcommand{\GMVReturn}{32.55\%}
+\newcommand{\GMVVol}{14.85\%}
+\newcommand{\GMVSharpe}{1.7540}
+\newcommand{\MSRReturn}{37.30\%}
+\newcommand{\MSRVol}{16.17\%}
+\newcommand{\MSRSharpe}{1.9049}
+
+% Section 1 paragraph
+\newcommand{\MethodologyText}{%
+From the 30-stock NSE universe, we ranked stocks by annualised Sharpe ratio (RF = 6.5\%) and selected the top 10 for portfolio construction. For this dataset (739 trading days), this screening produced a diversified set across 7 sectors with predominantly low-to-moderate pairwise correlations (average correlation $\sim$0.30), and delivered strong GMV/MSR outcomes (Sharpe 1.7540 and 1.9049). Compared with a sector-constrained top-pick baseline designed to maximize diversification, this approach improved Sharpe for both optimized portfolios (GMV +0.4007, MSR +0.0476). These observed results support this as a robust method for this experiment.%
+}
+
+% Figure paths (replace per assignment)
+\newcommand{\EffFrontierFig}{fig_ef_v3_recreated.png}
+\newcommand{\CorrFig}{fig_corr_v3_recreated.png}
+
+% Footer
+\newcommand{\FooterText}{Tools: Python 3 - NumPy, Pandas, SciPy (SLSQP), Matplotlib, Seaborn, ReportLab | Data: NSE 3-Year Daily \% Returns (739 trading days, 30 stocks)}
+
+\begin{document}
+\color{BodyGray}
+
+% =========================
+% Title
+% =========================
+\begin{center}
+  {\fontsize{15}{18}\selectfont\textbf{\textcolor{ReportBlue}{\ReportTitle}}}\par
+  \vspace{1pt}
+  {\fontsize{8}{10}\selectfont\textcolor{CaptionGray}{\ReportSubtitle}}
+\end{center}
+\vspace{4pt}
+\noindent\textcolor{ReportBlue}{\rule{\linewidth}{2pt}}
+\vspace{5pt}
+
+% =========================
+% KPI Banner (two boxed groups of three)
+% =========================
+\noindent
+\begin{minipage}[t]{0.496\linewidth}
+  \arrayrulecolor{LightBlue}
+  \setlength{\tabcolsep}{3pt}
+  \begin{tabular}{|>{\centering\arraybackslash}p{0.30\linewidth}|>{\centering\arraybackslash}p{0.30\linewidth}|>{\centering\arraybackslash}p{0.30\linewidth}|}
+    \hline
+    \cellcolor{KPIBlueBG}{\fontsize{13}{15}\selectfont\textbf{\textcolor{LightBlue}{\GMVReturn}}} &
+    \cellcolor{KPIBlueBG}{\fontsize{13}{15}\selectfont\textbf{\textcolor{MetricRed}{\GMVVol}}} &
+    \cellcolor{KPIBlueBG}{\fontsize{13}{15}\selectfont\textbf{\textcolor{GoodGreen}{\GMVSharpe}}} \\
+    \cellcolor{KPIBlueBG}{\fontsize{7}{9}\selectfont\textcolor{CaptionGray}{GMV Return}} &
+    \cellcolor{KPIBlueBG}{\fontsize{7}{9}\selectfont\textcolor{CaptionGray}{GMV Volatility}} &
+    \cellcolor{KPIBlueBG}{\fontsize{7}{9}\selectfont\textcolor{CaptionGray}{GMV Sharpe}} \\
+    \hline
+  \end{tabular}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.496\linewidth}
+  \arrayrulecolor{GoodGreen}
+  \setlength{\tabcolsep}{3pt}
+  \begin{tabular}{|>{\centering\arraybackslash}p{0.30\linewidth}|>{\centering\arraybackslash}p{0.30\linewidth}|>{\centering\arraybackslash}p{0.30\linewidth}|}
+    \hline
+    \cellcolor{KPIGreenBG}{\fontsize{13}{15}\selectfont\textbf{\textcolor{LightBlue}{\MSRReturn}}} &
+    \cellcolor{KPIGreenBG}{\fontsize{13}{15}\selectfont\textbf{\textcolor{MetricRed}{\MSRVol}}} &
+    \cellcolor{KPIGreenBG}{\fontsize{13}{15}\selectfont\textbf{\textcolor{GoodGreen}{\MSRSharpe}}} \\
+    \cellcolor{KPIGreenBG}{\fontsize{7}{9}\selectfont\textcolor{CaptionGray}{MSR Return}} &
+    \cellcolor{KPIGreenBG}{\fontsize{7}{9}\selectfont\textcolor{CaptionGray}{MSR Volatility}} &
+    \cellcolor{KPIGreenBG}{\fontsize{7}{9}\selectfont\textcolor{CaptionGray}{MSR Sharpe}} \\
+    \hline
+  \end{tabular}
+\end{minipage}
+
+\vspace{6pt}
+
+% =========================
+% Section 1
+% =========================
+\SectionBar{1 \;|\; Stock Selection - Methodology \& Justification}
+\vspace{2pt}
+{\fontsize{7.8}{10.5}\selectfont\justifying \MethodologyText}
+
+\vspace{6pt}
+
+% =========================
+% Section 2 + 3
+% =========================
+\SectionBar{2 \;|\; Efficient Frontier (Monte Carlo) \hfill 3 \;|\; Correlation Matrix}
+\vspace{2pt}
+
+\noindent
+\begin{minipage}[t]{0.548\linewidth}
+  \centering
+  \includegraphics[width=\linewidth,height=6.6cm,keepaspectratio]{\EffFrontierFig}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.448\linewidth}
+  \centering
+  \includegraphics[width=\linewidth,height=6.6cm,keepaspectratio]{\CorrFig}
+\end{minipage}
+
+\vspace{2pt}
+\noindent
+\begin{minipage}[t]{0.548\linewidth}
+  \centering{\fontsize{7}{9}\selectfont\textcolor{CaptionGray}{Each dot is a random long-only portfolio; red marker = GMV, blue star = MSR.}}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.448\linewidth}
+  \centering{\fontsize{7}{9}\selectfont\textcolor{CaptionGray}{Pearson correlation matrix for the selected 10 stocks.}}
+\end{minipage}
+
+\vspace{6pt}
+
+% =========================
+% Section 4
+% =========================
+\SectionBar{4 \;|\; Weight Attribution - GMV vs. MSR}
+\vspace{2pt}
+
+{\fontsize{7.2}{8.8}\selectfont
+\arrayrulecolor{MidGray}
+\rowcolors{2}{LightGray}{white}
+\begin{tabular}{|>{\RaggedRight\arraybackslash}p{2.2cm}|>{\RaggedRight\arraybackslash}p{3.5cm}|>{\RaggedRight\arraybackslash}p{3.2cm}|>{\centering\arraybackslash}p{1.9cm}|>{\centering\arraybackslash}p{1.8cm}|>{\centering\arraybackslash}p{1.5cm}|>{\centering\arraybackslash}p{1.8cm}|>{\centering\arraybackslash}p{1.8cm}|}
+  \hline
+  \rowcolor{ReportBlue}
+  \textcolor{white}{\textbf{Stock}} &
+  \textcolor{white}{\textbf{Company}} &
+  \textcolor{white}{\textbf{Sector}} &
+  \textcolor{white}{\textbf{Ann. Return}} &
+  \textcolor{white}{\textbf{Ann. Vol}} &
+  \textcolor{white}{\textbf{Sharpe}} &
+  \textcolor{white}{\textbf{GMV Wt.}} &
+  \textcolor{white}{\textbf{MSR Wt.}} \\
+  \hline
+  BHARTIARTL & Bharti Airtel & Telecommunications & 34.7\% & 20.1\% & 1.40 & \textcolor{LightBlue}{\textbf{33.1\%}} & \textcolor{GoodGreen}{\textbf{35.0\%}} \\
+  BAJAJ-AUTO & Bajaj Auto & Automobiles & 36.7\% & 24.4\% & 1.23 & \textcolor{LightBlue}{\textbf{17.3\%}} & \textcolor{GoodGreen}{\textbf{21.0\%}} \\
+  TRENT & Trent & Retail/E-commerce & 44.9\% & 35.0\% & 1.10 & \textcolor{LightBlue}{\textbf{2.5\%}} & \textcolor{GoodGreen}{\textbf{12.1\%}} \\
+  M\&M & Mahindra \& Mahindra & Automobiles & 36.4\% & 27.4\% & 1.09 & \textcolor{LightBlue}{\textbf{5.6\%}} & \textcolor{GoodGreen}{\textbf{7.8\%}} \\
+  INDUSTOWER & Indus Towers & Telecommunications & 44.7\% & 35.7\% & 1.07 & \textcolor{LightBlue}{\textbf{0.0\%}} & \textcolor{GoodGreen}{\textbf{9.6\%}} \\
+  ADANIPORTS & Adani Ports & Construction/Infra & 42.9\% & 35.8\% & 1.02 & \textcolor{LightBlue}{\textbf{0.0\%}} & \textcolor{GoodGreen}{\textbf{3.9\%}} \\
+  NTPC & NTPC & Energy \& Power & 31.9\% & 25.5\% & 1.00 & \textcolor{LightBlue}{\textbf{4.9\%}} & \textcolor{GoodGreen}{\textbf{5.4\%}} \\
+  SBIN & State Bank of India & Banking \& Finance & 28.9\% & 22.8\% & 0.98 & \textcolor{LightBlue}{\textbf{17.5\%}} & \textcolor{GoodGreen}{\textbf{5.4\%}} \\
+  HINDALCO & Hindalco & Metals \& Mining & 29.4\% & 28.4\% & 0.80 & \textcolor{LightBlue}{\textbf{5.7\%}} & \textcolor{GoodGreen}{\textbf{0.0\%}} \\
+  LT & Larsen \& Toubro & Construction/Infra & 24.4\% & 23.3\% & 0.77 & \textcolor{LightBlue}{\textbf{13.4\%}} & \textcolor{GoodGreen}{\textbf{0.0\%}} \\
+  \hline
+  \rowcolor{MidGray}
+  \textbf{TOTAL} &  &  &  &  &  & \textbf{100.0\%} & \textbf{100.0\%} \\
+  \hline
+\end{tabular}
+}
+
+\vspace{8pt}
+\noindent\textcolor{MidGray}{\rule{\linewidth}{0.8pt}}
+\vspace{2pt}
+\begin{center}
+  {\fontsize{6.5}{8}\selectfont\textcolor{FooterGray}{\FooterText}}
+\end{center}
+
+\end{document}

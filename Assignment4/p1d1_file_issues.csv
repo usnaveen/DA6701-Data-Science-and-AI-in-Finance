@@ -1,0 +1,7 @@
+ticker,file,reason,details
+ANDV,ANDV.csv,empty_dataframe,CSV has no rows.
+ESRX,ESRX.csv,empty_dataframe,CSV has no rows.
+EVHC,EVHC.csv,empty_dataframe,CSV has no rows.
+NFX,NFX.csv,empty_dataframe,CSV has no rows.
+SCG,SCG.csv,empty_dataframe,CSV has no rows.
+sp500_tickers_cache,sp500_tickers_cache.csv,not_price_history,"Cache file, not a stock or index OHLCV history."

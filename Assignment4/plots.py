@@ -86,14 +86,14 @@ def plot_cumulative_returns(
     """
     fig, ax = plt.subplots(figsize=figsize)
 
-    bench_cumret = (1 + bench).cumprod()
+    bench_cumret = np.exp(bench.cumsum())
     ax.plot(bench_cumret.index, bench_cumret.values,
             color=_COLOURS["Benchmark"], linewidth=2.5,
             linestyle=":", label="S&P 500 (benchmark)")
 
     for label, weights in weights_per_method.items():
         p = portfolio_returns(weights, R)
-        cumret = (1 + p).cumprod()
+        cumret = np.exp(p.cumsum())
         colour = _method_colour(label)
         ax.plot(cumret.index, cumret.values,
                 color=colour, linewidth=2, label=label)

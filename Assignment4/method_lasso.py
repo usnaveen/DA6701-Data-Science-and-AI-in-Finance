@@ -94,8 +94,8 @@ def get_lasso_weights_for_k(
 
 if __name__ == "__main__":
     R_train, b_train, R_val, b_val, R_hold, b_hold = load_splits()
-    print(f"Running Lasso sweep on {R_train.shape[1]} stocks …")
+    print(f"Running Lasso sweep on {R_train.shape[1]} stocks ...")
     results = run_lasso_sweep(R_train, b_train, R_val, b_val, R_hold, b_hold)
     print(results[["k", "TE_val", "IR_val", "TE_hold", "IR_hold", "alpha"]].to_string())
     results.drop(columns="weights").to_csv("data/lasso_results.csv", index=False)
-    print("Saved → data/lasso_results.csv")
+    print("Saved to data/lasso_results.csv")

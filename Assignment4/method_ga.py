@@ -3,7 +3,7 @@
 Strategy
 --------
 Each individual in the GA population is a set of k ticker indices.
-Fitness = −TE(portfolio, benchmark) on the training set (maximise → minimise TE).
+Fitness = -TE(portfolio, benchmark) on the training set (maximise → minimise TE).
 Crossover: two-point cut; mutation: random stock swap with probability p_mut.
 After convergence the best individual's weights are solved via the same QP used
 by the Autoencoder method.
@@ -163,4 +163,4 @@ if __name__ == "__main__":
     )
     print(results[["k", "TE_val", "IR_val", "TE_hold", "IR_hold"]].to_string())
     results.drop(columns="weights").to_csv("data/ga_results.csv", index=False)
-    print("Saved → data/ga_results.csv")
+    print("Saved to data/ga_results.csv")

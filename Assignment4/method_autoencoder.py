@@ -2,13 +2,13 @@
 
 Strategy
 --------
-1. Train a symmetric autoencoder on the T × N daily return matrix.
+1. Train a symmetric autoencoder on the T x N daily return matrix.
 2. Compute a *communality* score for each stock: the R² of reconstructing
    that stock's return series from the bottleneck latent representation.
 3. Rank stocks by communality and select the top-k.
 4. Solve a Quadratic Programme (QP) to find long-only weights that minimise
-   the variance of active returns (portfolio − benchmark).
-5. Sweep k ∈ {10, 15, …, 100} and report val + holdout metrics.
+   the variance of active returns (portfolio - benchmark).
+5. Sweep k ∈ {10, 15, ..., 100} and report val + holdout metrics.
 """
 
 import numpy as np
@@ -22,7 +22,7 @@ from eval import evaluate, load_splits
 
 
 class ReturnAutoencoder(nn.Module):
-    """Symmetric autoencoder: N → 128 → latent_dim → 128 → N."""
+    """Symmetric autoencoder: N -> 128 -> latent_dim -> 128 -> N."""
 
     def __init__(self, n_stocks: int, latent_dim: int = 32, dropout: float = 0.1):
         super().__init__()
@@ -60,6 +60,7 @@ def train_autoencoder(
     """
     if device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
+        device = "mps" if torch.backends.mps.is_available() else "cpu"
 
     X_np = R_train.fillna(0.0).values.astype(np.float32)
     n_total = len(X_np)
@@ -183,13 +184,13 @@ def run_autoencoder_sweep(
         k_range = range(10, 101, 5)
 
     if verbose:
-        print("Training autoencoder …")
+        print("Training autoencoder ...")
     model = train_autoencoder(
         R_train, latent_dim=latent_dim, n_epochs=n_epochs, verbose=verbose
     )
 
     if verbose:
-        print("Computing communality scores …")
+        print("Computing communality scores ...")
     communality = compute_communality(model, R_train)
     ranked = sorted(communality.items(), key=lambda x: -x[1])
 
@@ -223,4 +224,4 @@ if __name__ == "__main__":
     )
     print(results[["k", "TE_val", "IR_val", "TE_hold", "IR_hold"]].to_string())
     results.drop(columns="weights").to_csv("data/ae_results.csv", index=False)
-    print("Saved → data/ae_results.csv")
+    print("Saved to data/ae_results.csv")

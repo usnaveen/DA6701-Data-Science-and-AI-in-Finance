@@ -140,3 +140,57 @@
 
 - The compiled output is `Assignment4/final-compilation/assignment4_report.pdf`.
 - A few harmless LaTeX font-size substitution warnings appeared during compilation, but the document built successfully.
+
+## 2026-04-03 - Member Cover Page and Template Update
+
+### Approach
+
+- Used the member-cover-page structure from the provided `Assignment3_Final_Report.tex`.
+- Applied the same cover-page layout to the Assignment 4 report.
+- Updated the root LaTeX template so future reports can reuse the same member-page format directly.
+
+### Changes Made
+
+- Updated `Assignment4/final-compilation/assignment4_report.tex` to include a front page with:
+  - course header
+  - assignment title
+  - report topic
+  - group member names and roll numbers
+- Recompiled the Assignment 4 report successfully after adding the front page.
+- Updated the project-root `Portfolio_Report_LaTeX_Template.tex` to include:
+  - reusable cover-page variables
+  - a generic member table
+  - the same front-page pattern before the main report body
+
+### Notes
+
+- The compiled Assignment 4 PDF now has `3` pages total: `1` member cover page plus `2` report pages.
+- I did not compile the root template because it still contains placeholder content and placeholder figure paths by design.
+
+## 2026-04-03 - Final Report Layout Revision
+
+### Approach
+
+- Revised the Assignment 4 report structure to match the requested narrative flow and figure set more closely.
+- Removed the summary KPI boxes so the content starts directly with the report sections.
+- Expanded the visualization coverage to include all three sector-drift plots and both cumulative-return plots.
+
+### Changes Made
+
+- Removed the top metric boxes for readable CSVs, final stocks, issue counts, and best-method summary.
+- Kept section labels in the `n | Title` format throughout the report.
+- Renamed Sections 3 and 4 to remove the phrase `Required Deliverables`.
+- Updated the sector-drift section to include:
+  - `sector_drift_lasso.png`
+  - `sector_drift_ae.png`
+  - `sector_drift_ga.png`
+- Added a new Section 5 for cumulative returns with:
+  - `cumret_val.png`
+  - `cumret_hold.png`
+- Shifted the conclusion to Section 6 so the report ends with the conclusion as requested.
+- Recompiled the report successfully after the layout revision.
+
+### Notes
+
+- The updated compiled output remains `Assignment4/final-compilation/assignment4_report.pdf`.
+- Total compiled length remains `3` pages including the member cover page.

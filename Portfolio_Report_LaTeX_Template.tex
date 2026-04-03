@@ -4,11 +4,7 @@
 % Page + Font
 % =========================
 \usepackage[a4paper,left=1.6cm,right=1.6cm,top=1.3cm,bottom=1.3cm]{geometry}
-\usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
-\usepackage{helvet}
-\renewcommand{\familydefault}{\sfdefault}
-\usepackage{microtype}
 \usepackage{setspace}
 
 % =========================
@@ -19,7 +15,6 @@
 \usepackage{array}
 \usepackage{tabularx}
 \usepackage{booktabs}
-\usepackage{makecell}
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage{caption}
@@ -66,6 +61,18 @@
 % =========================
 % Template variables (EDIT THESE)
 % =========================
+\newcommand{\CoverCourse}{DA6701 : Data Science and AI for Finance}
+\newcommand{\CoverAssignment}{Assignment X}
+\newcommand{\CoverTopic}{Portfolio Report Subtitle / Topic}
+\newcommand{\MemberOneName}{Member 1 Name}
+\newcommand{\MemberOneRoll}{ROLL001}
+\newcommand{\MemberTwoName}{Member 2 Name}
+\newcommand{\MemberTwoRoll}{ROLL002}
+\newcommand{\MemberThreeName}{Member 3 Name}
+\newcommand{\MemberThreeRoll}{ROLL003}
+\newcommand{\MemberFourName}{Member 4 Name}
+\newcommand{\MemberFourRoll}{ROLL004}
+
 \newcommand{\ReportTitle}{Portfolio Optimization - Report}
 \newcommand{\ReportSubtitle}{DA6701 - Assignment I | Modern Portfolio Theory | NSE 30-Stock Universe | RF = 6.5\% | Long-Only | Monte Carlo: 20,000 simulations}
 
@@ -91,6 +98,49 @@ From the 30-stock NSE universe, we ranked stocks by annualised Sharpe ratio (RF 
 
 \begin{document}
 \color{BodyGray}
+\thispagestyle{empty}
+
+% =========================
+% Member Cover Page
+% =========================
+\begin{center}
+  \vspace*{0.3cm}
+  \textcolor{ReportBlue}{\rule{0.98\linewidth}{1.2pt}}
+
+  \vspace{1.05cm}
+  \arrayrulecolor{ReportBlue}
+  \begin{tabular}{|>{\centering\arraybackslash}p{0.90\linewidth}|}
+    \hline
+    \rowcolor{LightBlue}
+    \textcolor{white}{\fontsize{12}{14}\selectfont\textbf{\CoverCourse}} \\
+    \hline
+  \end{tabular}
+
+  \vspace{1.55cm}
+  {\fontsize{30}{34}\selectfont\textbf{\textcolor{ReportBlue}{\CoverAssignment}}}\par
+  \vspace{3pt}
+  {\fontsize{20}{24}\selectfont\textcolor{LightBlue}{\CoverTopic}}\par
+
+  \vspace{1.7cm}
+  {\renewcommand{\arraystretch}{1.30}
+  \arrayrulecolor{ReportBlue}
+  \rowcolors{2}{LightGray}{white}
+  \begin{tabular}{|>{\centering\arraybackslash}p{0.48\linewidth}|>{\centering\arraybackslash}p{0.26\linewidth}|}
+    \hline
+    \rowcolor{ReportBlue}
+    \textcolor{white}{\textbf{Name}} & \textcolor{white}{\textbf{Roll Number}} \\
+    \hline
+    \MemberOneName & \textcolor{LightBlue}{\textbf{\MemberOneRoll}} \\
+    \MemberTwoName & \textcolor{LightBlue}{\textbf{\MemberTwoRoll}} \\
+    \MemberThreeName & \textcolor{LightBlue}{\textbf{\MemberThreeRoll}} \\
+    \MemberFourName & \textcolor{LightBlue}{\textbf{\MemberFourRoll}} \\
+    \hline
+  \end{tabular}}
+
+  \vfill
+  \textcolor{MidGray}{\rule{0.96\linewidth}{0.8pt}}
+\end{center}
+\newpage
 
 % =========================
 % Title

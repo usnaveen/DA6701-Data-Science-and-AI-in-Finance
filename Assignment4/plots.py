@@ -11,7 +11,7 @@ import matplotlib.ticker as mtick
 from eval import portfolio_returns
 
 
-# ── colour palette ────────────────────────────────────────────────────────────
+# colour palette
 _COLOURS = {
     "Lasso":       "#2196F3",
     "Autoencoder": "#FF9800",
@@ -27,7 +27,7 @@ def _method_colour(label: str) -> str:
     return "#607D8B"
 
 
-# ── 1. TE vs k ────────────────────────────────────────────────────────────────
+# 1. TE vs k
 def plot_te_vs_k(
     results_frames: dict,
     title: str = "Sparsity vs Tracking Error",
@@ -60,12 +60,13 @@ def plot_te_vs_k(
     ax.set_title(title, fontsize=14, fontweight="bold")
     ax.legend(fontsize=10)
     ax.grid(True, alpha=0.35)
+    # ax.set_xticks(range(10, 101, 10))
     ax.yaxis.set_major_formatter(mtick.PercentFormatter(xmax=1, decimals=1))
     fig.tight_layout()
     return fig
 
 
-# ── 2. Cumulative returns ─────────────────────────────────────────────────────
+# 2. Cumulative returns
 def plot_cumulative_returns(
     weights_per_method: dict,
     R: pd.DataFrame,
@@ -108,7 +109,7 @@ def plot_cumulative_returns(
     return fig
 
 
-# ── 3. Sector drift ───────────────────────────────────────────────────────────
+# 3. Sector drift
 def plot_sector_drift(
     portfolio_weights: dict,
     sector_map_path: str = "data/sector_map.csv",
@@ -126,14 +127,24 @@ def plot_sector_drift(
     """
     sector_map = pd.read_csv(sector_map_path, index_col="ticker")
 
-    sp500_weights = sector_map["sector"].value_counts(normalize=True)
+    sp500_sector = {}
+    for ticker, row in sector_map.iterrows():
+        s = row["sector"]
+        sp500_sector[s] = sp500_sector.get(s, 0) + row["market_cap"]
+    sp500_series = pd.Series(sp500_sector)
+    sp500_weights = sp500_series / sp500_series.sum()
 
     selected = list(portfolio_weights.keys())
     available = [t for t in selected if t in sector_map.index]
     if not available:
         raise ValueError("None of the portfolio tickers found in sector_map.")
 
-    port_sectors = sector_map.loc[available, "sector"].value_counts(normalize=True)
+    sector_weights = {}
+    for ticker in available:
+        sector = sector_map.loc[ticker, "sector"]
+        sector_weights[sector] = sector_weights.get(sector, 0) + portfolio_weights[ticker]
+    port_sectors = pd.Series(sector_weights)
+    port_sectors = port_sectors / port_sectors.sum()
 
     drift_df = pd.DataFrame(
         {"S&P 500": sp500_weights, portfolio_label: port_sectors}
@@ -145,7 +156,7 @@ def plot_sector_drift(
     ax.bar(x - width / 2, drift_df["S&P 500"], width,
            color="#9E9E9E", label="S&P 500")
     ax.bar(x + width / 2, drift_df[portfolio_label], width,
-           color="#2196F3", label=portfolio_label)
+           color=_method_colour(portfolio_label), label=portfolio_label)
     ax.set_xticks(x)
     ax.set_xticklabels(drift_df.index, rotation=35, ha="right", fontsize=9)
     ax.set_ylabel("Sector Weight", fontsize=12)

@@ -58,9 +58,12 @@ def train_autoencoder(
 
     Returns the trained model (moved to CPU).
     """
-    if device is None:
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        device = "mps" if torch.backends.mps.is_available() else "cpu"
+    if torch.cuda.is_available():
+        device = "cuda"
+    elif torch.backends.mps.is_available():
+        device = "mps"
+    else:
+        device = "cpu"
 
     X_np = R_train.fillna(0.0).values.astype(np.float32)
     n_total = len(X_np)
@@ -98,7 +101,7 @@ def train_autoencoder(
                     print(f"  Early stopping at epoch {epoch} (best val loss={best_val_loss:.6f})")
                 break
 
-        if verbose and epoch % 20 == 0:
+        if verbose and ((epoch % 20 == 0) or (epoch == 1) or (epoch == n_epochs)):
             print(f"  Epoch {epoch:4d} | train={loss.item():.6f} | val={val_loss:.6f}")
 
     if best_state is not None:

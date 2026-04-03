@@ -14,6 +14,7 @@ import pandas as pd
 from sklearn.linear_model import Lasso
 
 from eval import evaluate, load_splits
+from method_autoencoder import fit_weights_qp
 
 
 def run_lasso_sweep(
@@ -52,17 +53,19 @@ def run_lasso_sweep(
         lasso = Lasso(alpha=alpha, positive=True, max_iter=10_000, tol=1e-4)
         lasso.fit(X_train, y_train)
 
-        selected = {
-            ticker: w
+        selected = [
+            # ticker: w
+            ticker
             for ticker, w in zip(R_train.columns, lasso.coef_)
             if w > 1e-6
-        }
+        ]
         k = len(selected)
         if k < min_k:
             continue
 
-        total = sum(selected.values())
-        weights = {t: w / total for t, w in selected.items()}
+        # total = sum(selected.values())
+        # weights = {t: w / total for t, w in selected.items()}
+        weights = fit_weights_qp(selected, R_train, b_train)
 
         res = evaluate(weights, R_val, b_val, R_hold, b_hold, label="Lasso")
         res["alpha"] = float(alpha)

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.3.24)  3 APR 2026 16:30
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.3.24)  3 APR 2026 18:25
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -393,6 +393,10 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 LaTeX Font Warning: Font shape `OT1/cmr/m/n' in size <7.45> not available
 (Font)              size <7> substituted on input line 200.
 
+
+LaTeX Font Warning: Font shape `OT1/cmr/bx/n' in size <7.45> not available
+(Font)              size <7> substituted on input line 201.
+
 LaTeX Font Info:    Calculating math sizes for size <7.45> on input line 201.
 
 LaTeX Font Warning: Font shape `OT1/cmr/m/n' in size <3.72499> not available
@@ -425,72 +429,53 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 File: ../figures/sector_drift_lasso.png Graphic file (type png)
 <use ../figures/sector_drift_lasso.png>
 Package pdftex.def Info: ../figures/sector_drift_lasso.png  used on input line 
-210.
-(pdftex.def)             Requested size: 164.78944pt x 63.38055pt.
+208.
+(pdftex.def)             Requested size: 347.68494pt x 133.72498pt.
 <../figures/sector_drift_ae.png, id=31, 939.51pt x 361.35pt>
 File: ../figures/sector_drift_ae.png Graphic file (type png)
 <use ../figures/sector_drift_ae.png>
-Package pdftex.def Info: ../figures/sector_drift_ae.png  used on input line 215
+Package pdftex.def Info: ../figures/sector_drift_ae.png  used on input line 213
 .
-(pdftex.def)             Requested size: 164.78944pt x 63.38055pt.
+(pdftex.def)             Requested size: 347.68494pt x 133.72498pt.
 <../figures/sector_drift_ga.png, id=32, 939.51pt x 361.35pt>
 File: ../figures/sector_drift_ga.png Graphic file (type png)
 <use ../figures/sector_drift_ga.png>
-Package pdftex.def Info: ../figures/sector_drift_ga.png  used on input line 220
+Package pdftex.def Info: ../figures/sector_drift_ga.png  used on input line 218
 .
-(pdftex.def)             Requested size: 164.78944pt x 63.38055pt.
+(pdftex.def)             Requested size: 347.68494pt x 133.72498pt.
+LaTeX Font Info:    Calculating math sizes for size <7.2> on input line 225.
 
-
-LaTeX Font Warning: Font shape `OT1/cmr/m/n' in size <6.55> not available
-(Font)              size <7> substituted on input line 226.
-
-LaTeX Font Info:    Calculating math sizes for size <7.2> on input line 239.
 
 LaTeX Font Warning: Font shape `OT1/cmr/m/n' in size <3.59999> not available
-(Font)              size <5> substituted on input line 239.
+(Font)              size <5> substituted on input line 225.
 
 
 LaTeX Font Warning: Font shape `OML/cmm/m/it' in size <3.59999> not available
-(Font)              size <5> substituted on input line 239.
+(Font)              size <5> substituted on input line 225.
 
 
 LaTeX Font Warning: Font shape `OMS/cmsy/m/n' in size <3.59999> not available
-(Font)              size <5> substituted on input line 239.
+(Font)              size <5> substituted on input line 225.
 
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <7.2> on input line 239.
+(Font)              <7.2> on input line 225.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5.03996> on input line 239.
+(Font)              <5.03996> on input line 225.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <3.59999> on input line 239.
+(Font)              <3.59999> on input line 225.
 <../figures/cumret_val.png, id=33, 867.24pt x 361.35pt>
 File: ../figures/cumret_val.png Graphic file (type png)
 <use ../figures/cumret_val.png>
-Package pdftex.def Info: ../figures/cumret_val.png  used on input line 248.
+Package pdftex.def Info: ../figures/cumret_val.png  used on input line 234.
 (pdftex.def)             Requested size: 252.34007pt x 105.1417pt.
 <../figures/cumret_hold.png, id=34, 867.24pt x 361.35pt>
 File: ../figures/cumret_hold.png Graphic file (type png)
 <use ../figures/cumret_hold.png>
-Package pdftex.def Info: ../figures/cumret_hold.png  used on input line 253.
+Package pdftex.def Info: ../figures/cumret_hold.png  used on input line 239.
 (pdftex.def)             Requested size: 252.34007pt x 105.1417pt.
-
-LaTeX Font Warning: Font shape `OT1/cmr/m/n' in size <6.5> not available
-(Font)              size <6> substituted on input line 282.
-
-! Undefined control sequence.
-<argument> \FooterText 
-                       
-l.282 ...ctfont\textcolor{FooterGray}{\FooterText}
-                                                  }
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
 [3 <../figures/sector_drift_lasso.png> <../figures/sector_drift_ae.png> <../fig
 ures/sector_drift_ga.png> <../figures/cumret_val.png> <../figures/cumret_hold.p
-ng>] (./assignment4_report.aux)
+ng>] [4] (./assignment4_report.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
@@ -502,13 +487,13 @@ LaTeX Font Warning: Size substitutions with differences
 
  ) 
 Here is how much of TeX's memory you used:
- 4399 strings out of 469006
- 75884 string characters out of 5454813
- 502150 words of memory out of 5000000
- 33076 multiletter control sequences out of 15000+600000
- 632312 words of font info for 56 fonts, out of 8000000 for 9000
+ 4400 strings out of 469006
+ 75922 string characters out of 5454813
+ 503150 words of memory out of 5000000
+ 33078 multiletter control sequences out of 15000+600000
+ 632011 words of font info for 55 fonts, out of 8000000 for 9000
  319 hyphenation exceptions out of 8191
- 57i,10n,83p,777b,312s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 57i,10n,83p,832b,312s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx1
 0.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/amsfonts/cm/c
 mbx12.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/amsfonts/
@@ -526,10 +511,10 @@ onts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texlive/2026basic/texmf-dist
 st/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/2026basic/texmf
 -dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texlive/2026basic/te
 xmf-dist/fonts/type1/public/amsfonts/cm/cmtt8.pfb>
-Output written on assignment4_report.pdf (3 pages, 826690 bytes).
+Output written on assignment4_report.pdf (4 pages, 828515 bytes).
 PDF statistics:
- 109 PDF objects out of 1000 (max. 8388607)
- 57 compressed objects within 1 object stream
+ 112 PDF objects out of 1000 (max. 8388607)
+ 59 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  36 words of extra memory for PDF output out of 10000 (max. 10000000)
 

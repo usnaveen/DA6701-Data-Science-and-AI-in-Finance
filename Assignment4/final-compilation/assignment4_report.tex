@@ -130,7 +130,7 @@
 The task is to replicate the S\&P 500 daily return profile with a sparse long-only portfolio under the cardinality constraint $k \leq 50$. After validating the raw OHLCV files, we retained \ReadableFiles{} readable stock histories, excluded 6 issue files (5 empty CSVs and one non-price cache file), removed 24 late entrants / early exits, and dropped one additional ticker (CVG) because it still contained 25 missing training prices. The final model-ready matrix covers \texttt{2020-01-03} to \texttt{2025-12-31} and contains 553 stocks plus the benchmark. Validation and holdout price holes were forward-filled before return construction, while the training block was kept hole-free by design.
 
 \vspace{3pt}
-The cardinality-constrained tracking problem is an MIQP and is therefore NP-hard. To keep the comparison fair, all methods use the same two-stage pipeline: \textbf{(i)} method-specific stock selection and \textbf{(ii)} a shared long-only quadratic program that minimizes the variance of active returns subject to $\sum_i w_i = 1$ and $w_i \ge 0$. We report annualized Tracking Error (TE) and Information Ratio (IR), where TE should be low and IR should stay close to zero for a true index tracker.
+The cardinality-constrained tracking problem is an \textbf{MIQP} and is therefore \textbf{NP-hard}. To keep the comparison fair, all methods use the same two-stage pipeline: \textbf{(i)} method-specific stock selection and \textbf{(ii)} a shared long-only quadratic program that minimizes the variance of active returns subject to $\sum_i w_i = 1$ and $w_i \ge 0$. We report annualized \textbf{Tracking Error (TE)} and \textbf{Information Ratio (IR)}, where \textbf{TE} should be low and \textbf{IR} should stay close to zero for a true index tracker.
 }
 
 \vspace{4pt}
@@ -142,9 +142,9 @@ The cardinality-constrained tracking problem is an MIQP and is therefore NP-hard
   \rowcolor{ReportBlue}
   \textcolor{white}{\textbf{Method}} & \textcolor{white}{\textbf{Selection Stage}} & \textcolor{white}{\textbf{Implementation Note}} \\
   \hline
-  Lasso & Non-negative Lasso regression on training benchmark returns; alpha swept on a log-grid to produce sparse portfolios of different $k$. & Fast, interpretable, and directly supervised by the benchmark, but sensitive to regime shocks and concentration. \\
-  Autoencoder & Symmetric autoencoder (\texttt{553 $\rightarrow$ 128 $\rightarrow$ 32 $\rightarrow$ 128 $\rightarrow$ 553}); stocks ranked by communality (reconstruction $R^2$) and top-$k$ retained. & Captures shared latent structure, but unsupervised ranking can over-concentrate in sectors with strong common factor loadings. \\
-  Genetic Algorithm & Population search over $k$-stock subsets; fitness equals negative training TE, with crossover, mutation, and shared QP reweighting. & Computationally heavier, but best at directly optimizing sparse subset quality under the replication objective. \\
+  \textbf{Lasso} & Non-negative \textbf{Lasso} regression on training benchmark returns; alpha swept on a log-grid to produce sparse portfolios of different $k$. & Fast, interpretable, and directly supervised by the benchmark, but sensitive to regime shocks and concentration. \\
+  \textbf{Autoencoder} & Symmetric \textbf{autoencoder} (\texttt{553 $\rightarrow$ 128 $\rightarrow$ 32 $\rightarrow$ 128 $\rightarrow$ 553}); stocks ranked by communality (reconstruction $R^2$) and top-$k$ retained. & Captures shared latent structure, but unsupervised ranking can over-concentrate in sectors with strong common factor loadings. \\
+  \textbf{Genetic Algorithm} & Population search over $k$-stock subsets; fitness equals negative training \textbf{TE}, with crossover, mutation, and shared QP reweighting. & Computationally heavier, but best at directly optimizing sparse subset quality under the replication objective. \\
   \hline
 \end{tabularx}
 }
@@ -165,9 +165,9 @@ The cardinality-constrained tracking problem is an MIQP and is therefore NP-hard
   \textcolor{white}{\textbf{IR Holdout}} &
   \textcolor{white}{\textbf{Interpretation}} \\
   \hline
-  Lasso & 5.86\% & -2.29 & 6.78\% & +1.60 & Moderate tracking error, but a large IR sign flip reveals unstable active tilts under the April 2025 tariff shock and subsequent rebound. \\
-  Autoencoder & 8.96\% & +1.19 & 8.37\% & -0.74 & Highest TE at $k=50$; the unsupervised ranking produces persistent sector concentration, so the portfolio behaves less like a neutral tracker. \\
-  GA & \textbf{4.68\%} & -1.44 & \textbf{4.63\%} & \textbf{-0.10} & Best overall. It delivers the lowest out-of-sample TE on both splits and the holdout IR closest to the ideal target of zero. \\
+  \textbf{Lasso} & 5.86\% & -2.29 & 6.78\% & +1.60 & Moderate tracking error, but a large \textbf{IR sign flip} reveals unstable active tilts under the \textbf{April 2025 tariff shock} and subsequent rebound. \\
+  \textbf{Autoencoder} & 8.96\% & +1.19 & 8.37\% & -0.74 & Highest \textbf{TE} at $k=50$; the unsupervised ranking produces persistent \textbf{sector concentration}, so the portfolio behaves less like a neutral tracker. \\
+  \textbf{GA} & \textbf{4.68\%} & -1.44 & \textbf{4.63\%} & \textbf{-0.10} & \textbf{Best overall}. It delivers the lowest out-of-sample \textbf{TE} on both splits and the holdout \textbf{IR} closest to the ideal target of zero. \\
   \hline
 \end{tabular}
 }
@@ -189,54 +189,40 @@ The cardinality-constrained tracking problem is an MIQP and is therefore NP-hard
 \vspace{2pt}
 \noindent
 \begin{minipage}[t]{0.59\linewidth}
-  \centering{\fontsize{6.9}{8.4}\selectfont\textcolor{CaptionGray}{Out-of-sample TE falls steeply as $k$ rises from 10 to roughly 50, then flattens. GA dominates the sparse end of the trade-off curve.}}
+  \centering{\fontsize{6.9}{8.4}\selectfont\textcolor{CaptionGray}{Out-of-sample \textbf{TE} falls steeply as $k$ rises from 10 to roughly 50, then flattens. \textbf{GA} dominates the sparse end of the trade-off curve.}}
 \end{minipage}
 \hfill
 \begin{minipage}[t]{0.39\linewidth}
-  \centering{\fontsize{6.9}{8.4}\selectfont\textcolor{CaptionGray}{IR quantifies active drift. For a tracker, values near 0 are preferred; GA is closest on holdout.}}
+  \centering{\fontsize{6.9}{8.4}\selectfont\textcolor{CaptionGray}{\textbf{IR} quantifies active drift. For a tracker, values near 0 are preferred; \textbf{GA} is closest on holdout.}}
 \end{minipage}
 
 \vspace{4pt}
 {\fontsize{7.45}{9.3}\selectfont\justifying
-The deliverable curve shows the expected diminishing-return pattern: all methods improve rapidly from $k=10$ to around $k=50$, after which TE reductions become incremental. Lasso is especially brittle at small $k$ (TE above 25\% at $k \approx 10$), while GA already remains below 8\% at $k=10$, indicating better subset quality under severe sparsity. The IR plot adds the second required deliverable by highlighting that low TE alone is not sufficient: Lasso and Autoencoder both exhibit unstable directional bets across validation and holdout, whereas GA's holdout IR of -0.10 is the clearest evidence of genuine replication rather than accidental active management.
+The tracking error vs sparsity curve shows the expected \textbf{diminishing-return pattern}: all methods improve rapidly from $k=10$ to around $k=50$, after which \textbf{TE} reductions become incremental. \textbf{Lasso} is especially brittle at small $k$ (\textbf{TE} above 25\% at $k \approx 10$), while \textbf{GA} already remains below 8\% at $k=10$, indicating better subset quality under severe sparsity. The \textbf{IR} plot highlights that low \textbf{TE} alone is not sufficient: \textbf{Lasso} and \textbf{Autoencoder} both exhibit unstable directional bets across validation and holdout, whereas \textbf{GA}'s holdout \textbf{IR} of -0.10 is the clearest evidence of \textbf{genuine replication} rather than accidental active management.
 }
 
 \newpage
 
 \SectionBar{4. Sector Drift at k = 50}
-\noindent
-\begin{minipage}[t]{0.32\linewidth}
-  \centering
-  \includegraphics[width=\linewidth,height=3.15cm,keepaspectratio]{\SectorLassoFigure}
-\end{minipage}
-\hfill
-\begin{minipage}[t]{0.32\linewidth}
-  \centering
-  \includegraphics[width=\linewidth,height=3.15cm,keepaspectratio]{\SectorAEFigure}
-\end{minipage}
-\hfill
-\begin{minipage}[t]{0.32\linewidth}
-  \centering
-  \includegraphics[width=\linewidth,height=3.15cm,keepaspectratio]{\SectorGAFigure}
-\end{minipage}
+\begin{center}
+  \includegraphics[width=0.95\linewidth,height=4.7cm,keepaspectratio]{\SectorLassoFigure}
+
+  {\fontsize{6.7}{8.1}\selectfont\textcolor{CaptionGray}{\textbf{Lasso}: moderate drift, with visible Healthcare overweight and weaker Communication Services exposure.}}
+
+  \vspace{5pt}
+  \includegraphics[width=0.95\linewidth,height=4.7cm,keepaspectratio]{\SectorAEFigure}
+
+  {\fontsize{6.7}{8.1}\selectfont\textcolor{CaptionGray}{\textbf{Autoencoder}: the strongest sector concentration, especially in Financial Services and Utilities.}}
+
+  \vspace{5pt}
+  \includegraphics[width=0.95\linewidth,height=4.7cm,keepaspectratio]{\SectorGAFigure}
+
+  {\fontsize{6.7}{8.1}\selectfont\textcolor{CaptionGray}{\textbf{GA}: the closest overall match to market-cap weighted S\&P 500 sector shares.}}
+\end{center}
 
 \vspace{2pt}
-\noindent
-\begin{minipage}[t]{0.32\linewidth}
-  \centering{\fontsize{6.55}{8.0}\selectfont\textcolor{CaptionGray}{Lasso: moderate drift, with visible Healthcare overweight.}}
-\end{minipage}
-\hfill
-\begin{minipage}[t]{0.32\linewidth}
-  \centering{\fontsize{6.55}{8.0}\selectfont\textcolor{CaptionGray}{Autoencoder: strong concentration in Financials and Utilities.}}
-\end{minipage}
-\hfill
-\begin{minipage}[t]{0.32\linewidth}
-  \centering{\fontsize{6.55}{8.0}\selectfont\textcolor{CaptionGray}{GA: closest overall match to market-cap sector weights.}}
-\end{minipage}
-
-\vspace{3pt}
 {\fontsize{7.2}{8.95}\selectfont\justifying
-Sector drift explains a large part of the ranking at $k=50$. GA passes the benchmark-alignment check best, with only a mild Technology overweight and no severe sector omission. Lasso remains serviceable but carries visible Healthcare and Communication Services tilts. Autoencoder is the weakest replicator because its communality ranking heavily clusters in Financial Services and Utilities, producing a portfolio that behaves more like an active thematic basket than a neutral index proxy.
+\textbf{Sector drift} explains a large part of the ranking at $k=50$. \textbf{GA} passes the \textbf{benchmark-alignment check} best, with only a mild Technology overweight and no severe sector omission. \textbf{Lasso} remains serviceable but carries visible Healthcare and Communication Services tilts. \textbf{Autoencoder} is the weakest replicator because its \textbf{communality ranking} heavily clusters in Financial Services and Utilities, producing a portfolio that behaves more like an \textbf{active thematic basket} than a neutral index proxy.
 }
 
 \vspace{4pt}
@@ -256,30 +242,31 @@ Sector drift explains a large part of the ranking at $k=50$. GA passes the bench
 \vspace{2pt}
 \noindent
 \begin{minipage}[t]{0.49\linewidth}
-  \centering{\fontsize{6.6}{8.0}\selectfont\textcolor{CaptionGray}{Validation: the April 2025 tariff shock separates robust trackers from unstable active tilts.}}
+  \centering{\fontsize{6.6}{8.0}\selectfont\textcolor{CaptionGray}{Validation: the \textbf{April 2025 tariff shock} separates robust trackers from unstable active tilts.}}
 \end{minipage}
 \hfill
 \begin{minipage}[t]{0.49\linewidth}
-  \centering{\fontsize{6.6}{8.0}\selectfont\textcolor{CaptionGray}{Holdout: all methods tighten, but GA remains the cleanest path around the benchmark.}}
+  \centering{\fontsize{6.6}{8.0}\selectfont\textcolor{CaptionGray}{Holdout: all methods tighten, but \textbf{GA} remains the cleanest path around the benchmark.}}
 \end{minipage}
 
 \vspace{3pt}
 {\fontsize{7.2}{8.95}\selectfont\justifying
-The cumulative overlays reinforce the metric-based story. During validation, Lasso experiences the sharpest drawdown under the April 2025 shock, while Autoencoder overshoots the rebound and reveals a more directional active bet. GA stays closest to the benchmark throughout the stress period. In holdout, all three methods improve, but GA remains the most stable and benchmark-like, whereas Autoencoder drifts lower toward year-end.
+The \textbf{cumulative overlays} reinforce the metric-based story. During validation, \textbf{Lasso} experiences the sharpest drawdown under the \textbf{April 2025 shock}, while \textbf{Autoencoder} overshoots the rebound and reveals a more directional active bet. \textbf{GA} stays closest to the benchmark throughout the stress period. In holdout, all three methods improve, but \textbf{GA} remains the most stable and benchmark-like, whereas \textbf{Autoencoder} drifts lower toward year-end.
 }
 
-\vspace{4pt}
+\vspace{8pt}
+\newpage
 
 \SectionBar{6. Conclusion}
 {\fontsize{7.55}{9.55}\selectfont\justifying
-Across all required deliverables, the \textbf{Genetic Algorithm} is the strongest replication method. It achieves the lowest validation and holdout TE at the assignment target of $k=50$, keeps holdout IR closest to zero, and exhibits the cleanest sector alignment with the benchmark. Lasso remains attractive for speed and interpretability but is vulnerable to regime-specific tilts, while the Autoencoder's unsupervised selection objective produces excessive sector concentration. The main empirical takeaway is that, for sparse index replication, directly optimizing subset quality with a search-based method and then reweighting through a common long-only QP yields the most stable out-of-sample tracker.
+Across all methods, the \textbf{Genetic Algorithm} turned out to be a good replication method. It achieves the lowest validation and holdout \textbf{TE} at the target of $k=50$, keeps holdout \textbf{IR} closest to zero, and exhibits the cleanest \textbf{sector alignment} with the benchmark. \textbf{Lasso} remains attractive for speed and interpretability but is vulnerable to regime-specific tilts, while the \textbf{Autoencoder}'s unsupervised selection objective produces excessive \textbf{sector concentration}. The key empirical takeaway is that, for \textbf{sparse index replication}, directly optimizing subset quality with a search-based method and then reweighting through a common long-only \textbf{QP} yields a \textbf{stable out-of-sample tracker}.
 }
 
 \vspace{7pt}
 \noindent\textcolor{MidGray}{\rule{\linewidth}{0.8pt}}
 \vspace{2pt}
-\begin{center}
-  {\fontsize{6.5}{8}\selectfont\textcolor{FooterGray}{\FooterText}}
-\end{center}
+% \begin{center}
+%   {\fontsize{6.5}{8}\selectfont\textcolor{FooterGray}{\FooterText}}
+% \end{center}
 
 \end{document}

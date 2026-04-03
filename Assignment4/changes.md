@@ -194,3 +194,71 @@
 
 - The updated compiled output remains `Assignment4/final-compilation/assignment4_report.pdf`.
 - Total compiled length remains `3` pages including the member cover page.
+
+## 2026-04-03 - Sector Plot Readability Fix
+
+### Approach
+
+- Reworked the sector-drift section because the three-across layout was compressing the x-axis labels too aggressively to be readable.
+
+### Changes Made
+
+- Changed the sector-drift section in `Assignment4/final-compilation/assignment4_report.tex` from a single-row multi-panel layout to a stacked full-width layout.
+- Kept all three sector-drift plots, but gave each one substantially more horizontal space.
+- Restored the footer macro after noticing it had been commented out in the current LaTeX file.
+- Recompiled the report successfully after the layout fix.
+
+### Notes
+
+- The updated PDF now spans `4` pages total, largely because the wider sector plots need more vertical room.
+- The main benefit is that the sector names should now be clearly visible in the compiled report.
+
+## 2026-04-03 - Emphasis-Only Report Pass
+
+### Approach
+
+- Kept the report wording unchanged and made only formatting-level edits for readability.
+- Added bold emphasis to method names and a few key analytical phrases in the body text.
+
+### Changes Made
+
+- Updated `Assignment4/final-compilation/assignment4_report.tex` with emphasis on:
+  - `Lasso`
+  - `Autoencoder`
+  - `GA` / `Genetic Algorithm`
+  - important phrases such as `Tracking Error (TE)`, `Information Ratio (IR)`, `sector drift`, and `April 2025 tariff shock`
+- Recompiled the report successfully after the formatting-only pass.
+
+### Notes
+
+- No text content was rewritten in this step.
+- This was a bolding/emphasis-only update.
+
+## 2026-04-03 - Evaluator Readme
+
+### Approach
+
+- Read the current `Assignment4/README.md` as a reference, but simplified the handoff instructions into a plain-text evaluator note.
+- Focused the note on file locations, regeneration order, and the minimum steps needed if only the zip file and code are uploaded.
+
+### Changes Made
+
+- Added `Assignment4/final-compilation/readme.txt`.
+- Documented where the evaluator can find:
+  - the final report source and PDF
+  - the preprocessing notebook
+  - the replication notebook
+  - the method modules
+  - the generated data and figure outputs
+- Documented the intended execution order:
+  1. unzip `OHLCV_Data.zip`
+  2. run `data-preparation.ipynb`
+  3. run `generate_sector_map.py`
+  4. run `portfolio-replication.ipynb`
+  5. compile the final report
+- Added a note clarifying that the actual script name is `generate_sector_map.py` if any older note refers to `get_sector_map.py`.
+
+### Notes
+
+- This was a documentation-only update.
+- No code, figures, or report content changed in this step.

@@ -30,7 +30,7 @@ def portfolio_returns(weights: dict, returns_df: pd.DataFrame) -> pd.Series:
     weights : dict
         {ticker: float} — must sum to 1 (normalised internally just in case).
     returns_df : pd.DataFrame
-        T × N daily return matrix.
+        T x N daily return matrix.
     """
     tickers = list(weights.keys())
     w = np.array([weights[t] for t in tickers], dtype=float)

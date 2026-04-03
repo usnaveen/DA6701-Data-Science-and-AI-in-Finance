@@ -1,0 +1,2 @@
+mktextfm phvr8t
+mktexpk --mfmode / --bdpi 600 --mag 1+0/600 --dpi 600 ecrm0600

@@ -89,13 +89,12 @@ def ga_select(
         children = []
         while len(children) < pop_size // 2:
             p1, p2 = random.sample(elite, 2)
-            cut = k // 2
-            child = list(set(p1[:cut] + p2[cut:]))
+            pool = list(set(p1) | set(p2))
+            child = random.sample(pool, min(k, len(pool)))
             while len(child) < k:
                 candidate = random.randint(0, N - 1)
                 if candidate not in child:
                     child.append(candidate)
-            child = child[:k]
             children.append(child)
 
         for ind in children:

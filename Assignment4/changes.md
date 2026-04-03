@@ -113,3 +113,30 @@
 
 - No data artifacts were regenerated in this step.
 - This was a documentation-only update.
+
+## 2026-04-03 - Final Report Draft
+
+### Approach
+
+- Read the Assignment IV deliverables page, the report notes, the data-preparation and portfolio-replication notebooks, the plotting helpers, and all three method modules.
+- Used the Assignment 3 LaTeX template as the styling reference, but rewrote the layout for a compact two-page Assignment IV report.
+- Centered the report around the required deliverables from the assignment PDF:
+  - sparsity vs tracking error
+  - information ratio
+  - sector drift
+
+### Changes Made
+
+- Created `Assignment4/final-compilation/assignment4_report.tex`.
+- Wired the report to the generated figures:
+  - `figures/te_vs_k.png`
+  - `figures/information_ratio.png`
+  - `figures/sector_drift_ga.png`
+- Added a compact methodology summary, data-pipeline summary, and a `k=50` results table for Lasso, Autoencoder, and GA.
+- Highlighted GA as the best overall method based on holdout tracking quality and sector alignment.
+- Compiled the LaTeX successfully to confirm that the file is valid and stays within 2 pages.
+
+### Notes
+
+- The compiled output is `Assignment4/final-compilation/assignment4_report.pdf`.
+- A few harmless LaTeX font-size substitution warnings appeared during compilation, but the document built successfully.

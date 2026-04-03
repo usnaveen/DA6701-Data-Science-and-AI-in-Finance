@@ -1,0 +1,214 @@
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[a4paper,left=1.45cm,right=1.45cm,top=1.2cm,bottom=1.2cm]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage{setspace}
+\usepackage[table]{xcolor}
+\usepackage{colortbl}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{ragged2e}
+
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.16}
+\captionsetup{font=footnotesize}
+
+\definecolor{ReportBlue}{HTML}{0D2C54}
+\definecolor{LightBlue}{HTML}{1E5799}
+\definecolor{LightGray}{HTML}{F4F6F9}
+\definecolor{MidGray}{HTML}{C8CDD6}
+\definecolor{GoodGreen}{HTML}{1E7D46}
+\definecolor{MetricRed}{HTML}{C0392B}
+\definecolor{CaptionGray}{HTML}{666666}
+\definecolor{BodyGray}{HTML}{333333}
+\definecolor{FooterGray}{HTML}{999999}
+\definecolor{KPIBlueBG}{HTML}{EAF0FB}
+\definecolor{KPIGreenBG}{HTML}{E8F5EE}
+
+\newcommand{\SectionBar}[1]{%
+  \vspace{0.22em}
+  \noindent\colorbox{ReportBlue}{%
+    \parbox{\dimexpr\linewidth-2\fboxsep\relax}{%
+      \vspace{2.3pt}\textcolor{white}{\bfseries\footnotesize #1}\vspace{2.3pt}
+    }%
+  }%
+  \vspace{0.28em}
+}
+
+\newcommand{\ReportTitle}{Assignment IV -- Sparse S\&P 500 Portfolio Replication}
+\newcommand{\ReportSubtitle}{DA6701 | Benchmark: \texttt{\string^GSPC} daily log returns | Train: Jan 2020--Dec 2024 | Validation: Jan 2025--Jun 2025 | Holdout: Jul 2025--Dec 2025}
+
+\newcommand{\ReadableFiles}{578}
+\newcommand{\FinalStocks}{553}
+\newcommand{\TotalExcluded}{31}
+\newcommand{\BestMethod}{GA}
+\newcommand{\BestTE}{4.63\%}
+\newcommand{\BestIR}{-0.10}
+
+\newcommand{\TEFigure}{../figures/te_vs_k.png}
+\newcommand{\IRFigure}{../figures/information_ratio.png}
+\newcommand{\SectorFigure}{../figures/sector_drift_ga.png}
+
+\newcommand{\FooterText}{Tools: Python 3, Pandas, NumPy, scikit-learn, PyTorch, SciPy (SLSQP) | Methods: Lasso, Autoencoder, Genetic Algorithm | Final universe: 553 stocks + benchmark}
+
+\begin{document}
+\color{BodyGray}
+
+\begin{center}
+  {\fontsize{15}{17}\selectfont\textbf{\textcolor{ReportBlue}{\ReportTitle}}}\par
+  \vspace{1pt}
+  {\fontsize{8}{10}\selectfont\textcolor{CaptionGray}{\ReportSubtitle}}
+\end{center}
+\vspace{3pt}
+\noindent\textcolor{ReportBlue}{\rule{\linewidth}{2pt}}
+\vspace{5pt}
+
+\noindent
+\begin{minipage}[t]{0.496\linewidth}
+  \arrayrulecolor{LightBlue}
+  \setlength{\tabcolsep}{3pt}
+  \begin{tabular}{|>{\centering\arraybackslash}p{0.30\linewidth}|>{\centering\arraybackslash}p{0.30\linewidth}|>{\centering\arraybackslash}p{0.30\linewidth}|}
+    \hline
+    \cellcolor{KPIBlueBG}{\fontsize{13}{15}\selectfont\textbf{\textcolor{LightBlue}{\ReadableFiles}}} &
+    \cellcolor{KPIBlueBG}{\fontsize{13}{15}\selectfont\textbf{\textcolor{GoodGreen}{\FinalStocks}}} &
+    \cellcolor{KPIBlueBG}{\fontsize{13}{15}\selectfont\textbf{\textcolor{MetricRed}{\TotalExcluded}}} \\
+    \cellcolor{KPIBlueBG}{\fontsize{7}{9}\selectfont\textcolor{CaptionGray}{Readable CSVs}} &
+    \cellcolor{KPIBlueBG}{\fontsize{7}{9}\selectfont\textcolor{CaptionGray}{Final Stocks}} &
+    \cellcolor{KPIBlueBG}{\fontsize{7}{9}\selectfont\textcolor{CaptionGray}{Excluded Files / Names}} \\
+    \hline
+  \end{tabular}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.496\linewidth}
+  \arrayrulecolor{GoodGreen}
+  \setlength{\tabcolsep}{3pt}
+  \begin{tabular}{|>{\centering\arraybackslash}p{0.30\linewidth}|>{\centering\arraybackslash}p{0.30\linewidth}|>{\centering\arraybackslash}p{0.30\linewidth}|}
+    \hline
+    \cellcolor{KPIGreenBG}{\fontsize{13}{15}\selectfont\textbf{\textcolor{LightBlue}{\BestMethod}}} &
+    \cellcolor{KPIGreenBG}{\fontsize{13}{15}\selectfont\textbf{\textcolor{MetricRed}{\BestTE}}} &
+    \cellcolor{KPIGreenBG}{\fontsize{13}{15}\selectfont\textbf{\textcolor{GoodGreen}{\BestIR}}} \\
+    \cellcolor{KPIGreenBG}{\fontsize{7}{9}\selectfont\textcolor{CaptionGray}{Best Method}} &
+    \cellcolor{KPIGreenBG}{\fontsize{7}{9}\selectfont\textcolor{CaptionGray}{Holdout TE @ k=50}} &
+    \cellcolor{KPIGreenBG}{\fontsize{7}{9}\selectfont\textcolor{CaptionGray}{Holdout IR @ k=50}} \\
+    \hline
+  \end{tabular}
+\end{minipage}
+
+\vspace{5pt}
+
+\SectionBar{1 \;|\; Problem Setup, Data Pipeline, and Model Design}
+{\fontsize{7.55}{9.55}\selectfont\justifying
+The task is to replicate the S\&P 500 daily return profile with a sparse long-only portfolio under the cardinality constraint $k \leq 50$. After validating the raw OHLCV files, we retained \ReadableFiles{} readable stock histories, excluded 6 issue files (5 empty CSVs and one non-price cache file), removed 24 late entrants / early exits, and dropped one additional ticker (CVG) because it still contained 25 missing training prices. The final model-ready matrix covers \texttt{2020-01-03} to \texttt{2025-12-31} and contains 553 stocks plus the benchmark. Validation and holdout price holes were forward-filled before return construction, while the training block was kept hole-free by design.
+
+\vspace{3pt}
+The cardinality-constrained tracking problem is an MIQP and is therefore NP-hard. To keep the comparison fair, all methods use the same two-stage pipeline: \textbf{(i)} method-specific stock selection and \textbf{(ii)} a shared long-only quadratic program that minimizes the variance of active returns subject to $\sum_i w_i = 1$ and $w_i \ge 0$. We report annualized Tracking Error (TE) and Information Ratio (IR), where TE should be low and IR should stay close to zero for a true index tracker.
+}
+
+\vspace{4pt}
+{\fontsize{7.1}{8.9}\selectfont
+\arrayrulecolor{MidGray}
+\rowcolors{2}{LightGray}{white}
+\begin{tabularx}{\linewidth}{|>{\bfseries\RaggedRight\arraybackslash}p{1.85cm}|>{\RaggedRight\arraybackslash}X|>{\RaggedRight\arraybackslash}p{4.2cm}|}
+  \hline
+  \rowcolor{ReportBlue}
+  \textcolor{white}{\textbf{Method}} & \textcolor{white}{\textbf{Selection Stage}} & \textcolor{white}{\textbf{Implementation Note}} \\
+  \hline
+  Lasso & Non-negative Lasso regression on training benchmark returns; alpha swept on a log-grid to produce sparse portfolios of different $k$. & Fast, interpretable, and directly supervised by the benchmark, but sensitive to regime shocks and concentration. \\
+  Autoencoder & Symmetric autoencoder (\texttt{553 $\rightarrow$ 128 $\rightarrow$ 32 $\rightarrow$ 128 $\rightarrow$ 553}); stocks ranked by communality (reconstruction $R^2$) and top-$k$ retained. & Captures shared latent structure, but unsupervised ranking can over-concentrate in sectors with strong common factor loadings. \\
+  Genetic Algorithm & Population search over $k$-stock subsets; fitness equals negative training TE, with crossover, mutation, and shared QP reweighting. & Computationally heavier, but best at directly optimizing sparse subset quality under the replication objective. \\
+  \hline
+\end{tabularx}
+}
+
+\vspace{5pt}
+
+\SectionBar{2 \;|\; k = 50 Summary Results}
+{\fontsize{7.25}{8.95}\selectfont
+\arrayrulecolor{MidGray}
+\rowcolors{2}{LightGray}{white}
+\begin{tabular}{|>{\bfseries\centering\arraybackslash}p{2.05cm}|>{\centering\arraybackslash}p{1.75cm}|>{\centering\arraybackslash}p{1.55cm}|>{\centering\arraybackslash}p{1.85cm}|>{\centering\arraybackslash}p{1.55cm}|>{\RaggedRight\arraybackslash}p{7.0cm}|}
+  \hline
+  \rowcolor{ReportBlue}
+  \textcolor{white}{\textbf{Method}} &
+  \textcolor{white}{\textbf{TE Val}} &
+  \textcolor{white}{\textbf{IR Val}} &
+  \textcolor{white}{\textbf{TE Holdout}} &
+  \textcolor{white}{\textbf{IR Holdout}} &
+  \textcolor{white}{\textbf{Interpretation}} \\
+  \hline
+  Lasso & 5.86\% & -2.29 & 6.78\% & +1.60 & Moderate tracking error, but a large IR sign flip reveals unstable active tilts under the April 2025 tariff shock and subsequent rebound. \\
+  Autoencoder & 8.96\% & +1.19 & 8.37\% & -0.74 & Highest TE at $k=50$; the unsupervised ranking produces persistent sector concentration, so the portfolio behaves less like a neutral tracker. \\
+  GA & \textbf{4.68\%} & -1.44 & \textbf{4.63\%} & \textbf{-0.10} & Best overall. It delivers the lowest out-of-sample TE on both splits and the holdout IR closest to the ideal target of zero. \\
+  \hline
+\end{tabular}
+}
+
+\vspace{5pt}
+
+\SectionBar{3 \;|\; Required Deliverables: Sparsity vs Tracking Error and Information Ratio}
+\noindent
+\begin{minipage}[t]{0.59\linewidth}
+  \centering
+  \includegraphics[width=\linewidth,height=5.9cm,keepaspectratio]{\TEFigure}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.39\linewidth}
+  \centering
+  \includegraphics[width=\linewidth,height=5.9cm,keepaspectratio]{\IRFigure}
+\end{minipage}
+
+\vspace{2pt}
+\noindent
+\begin{minipage}[t]{0.59\linewidth}
+  \centering{\fontsize{6.9}{8.4}\selectfont\textcolor{CaptionGray}{Out-of-sample TE falls steeply as $k$ rises from 10 to roughly 50, then flattens. GA dominates the sparse end of the trade-off curve.}}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.39\linewidth}
+  \centering{\fontsize{6.9}{8.4}\selectfont\textcolor{CaptionGray}{IR quantifies active drift. For a tracker, values near 0 are preferred; GA is closest on holdout.}}
+\end{minipage}
+
+\vspace{4pt}
+{\fontsize{7.45}{9.3}\selectfont\justifying
+The deliverable curve shows the expected diminishing-return pattern: all methods improve rapidly from $k=10$ to around $k=50$, after which TE reductions become incremental. Lasso is especially brittle at small $k$ (TE above 25\% at $k \approx 10$), while GA already remains below 8\% at $k=10$, indicating better subset quality under severe sparsity. The IR plot adds the second required deliverable by highlighting that low TE alone is not sufficient: Lasso and Autoencoder both exhibit unstable directional bets across validation and holdout, whereas GA's holdout IR of -0.10 is the clearest evidence of genuine replication rather than accidental active management.
+}
+
+\newpage
+
+\SectionBar{4 \;|\; Required Deliverable: Sector Drift at k = 50}
+\noindent
+\begin{minipage}[t]{0.62\linewidth}
+  \centering
+  \includegraphics[width=\linewidth,height=6.9cm,keepaspectratio]{\SectorFigure}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.35\linewidth}
+  {\fontsize{7.35}{9.1}\selectfont\justifying
+  The required sector-drift chart is shown for the GA portfolio at $k=50$, because this is the best overall tracker. Its sector weights remain close to the market-cap weighted S\&P 500 baseline, with only a mild Technology overweight. This makes the portfolio much more defensible as a replication strategy than the alternatives.
+
+  \vspace{4pt}
+  Lasso partially satisfies the drift criterion but still overweights Healthcare and underweights Communication Services. Autoencoder fails the sector-neutrality test: it concentrates heavily in Financial Services and Utilities because communality ranking favors stocks explained by the same latent factors.
+  }
+\end{minipage}
+
+\vspace{5pt}
+
+\SectionBar{5 \;|\; Conclusion}
+{\fontsize{7.55}{9.55}\selectfont\justifying
+Across all required deliverables, the \textbf{Genetic Algorithm} is the strongest replication method. It achieves the lowest validation and holdout TE at the assignment target of $k=50$, keeps holdout IR closest to zero, and exhibits the cleanest sector alignment with the benchmark. Lasso remains attractive for speed and interpretability but is vulnerable to regime-specific tilts, while the Autoencoder's unsupervised selection objective produces excessive sector concentration. The main empirical takeaway is that, for sparse index replication, directly optimizing subset quality with a search-based method and then reweighting through a common long-only QP yields the most stable out-of-sample tracker.
+}
+
+\vspace{7pt}
+\noindent\textcolor{MidGray}{\rule{\linewidth}{0.8pt}}
+\vspace{2pt}
+\begin{center}
+  {\fontsize{6.5}{8}\selectfont\textcolor{FooterGray}{\FooterText}}
+\end{center}
+
+\end{document}

@@ -29,7 +29,7 @@ warnings.filterwarnings("ignore")
 N_SECURITIES = 5
 TERMINAL_GOAL = 15_000_000  # Rs 1.5 Crore
 N_PATHS = 5000
-N_RESTARTS = 30  # number of random starting points
+N_RESTARTS = 50  # number of random starting points
 SEED_BASE = 100  # base seed for optimiser restarts
 
 
@@ -265,8 +265,8 @@ if __name__ == "__main__":
     cov_mock = np.diag(std_mock**2)
     savings_mock = np.array([240_000 * (1.04**t) for t in range(20)])
 
-    goals_A = {3: 1_500_000, 7: 2_500_000, 12: 3_000_000, 20: 15_000_000}
-    goals_B = {8: 1_000_000, 12: 2_000_000, 16: 4_000_000, 20: 15_000_000}
+    goals_A = {3: 1_500_000, 7: 2_500_000, 12: 3_000_000}
+    goals_B = {8: 1_000_000, 12: 2_000_000, 16: 4_000_000}
 
     print("\n-- Sequence A (Aggressive Early Goals) --")
     best_w_A, best_p_A, results_A = run_continuous_optimisation(

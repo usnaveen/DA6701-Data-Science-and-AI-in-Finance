@@ -174,8 +174,8 @@ if __name__ == "__main__":
     cov_mock = np.diag(std_mock**2)
     savings_mock = np.array([240_000 * (1.04**t) for t in range(20)])
 
-    goals_A = {3: 1_500_000, 7: 2_500_000, 12: 3_000_000, 20: 15_000_000}
-    goals_B = {8: 1_000_000, 12: 2_000_000, 16: 4_000_000, 20: 15_000_000}
+    goals_A = {3: 1_500_000, 7: 2_500_000, 12: 3_000_000}
+    goals_B = {8: 1_000_000, 12: 2_000_000, 16: 4_000_000}
 
     combos = generate_valid_combinations()
     print(f"\nValid combinations generated : {len(combos)}")

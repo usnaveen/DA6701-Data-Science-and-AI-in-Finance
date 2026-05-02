@@ -193,8 +193,8 @@ if __name__ == "__main__":
     weights_mock = np.array([0.2, 0.2, 0.2, 0.2, 0.2])
 
     # Goal sequences
-    goals_A = {3: 1_500_000, 7: 2_500_000, 12: 3_000_000, 20: 15_000_000}
-    goals_B = {8: 1_000_000, 12: 2_000_000, 16: 4_000_000, 20: 15_000_000}
+    goals_A = {3: 1_500_000, 7: 2_500_000, 12: 3_000_000}
+    goals_B = {8: 1_000_000, 12: 2_000_000, 16: 4_000_000}
 
     print("\n-- Sequence A (Aggressive Early Goals) --")
     final_A = simulate_portfolio(

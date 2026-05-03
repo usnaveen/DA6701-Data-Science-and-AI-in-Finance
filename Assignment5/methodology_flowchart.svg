@@ -1,0 +1,105 @@
+<svg viewBox="0 0 1100 340" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
+
+  <defs>
+    <marker id="arr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#C8CDD6"/>
+    </marker>
+    <marker id="arrBonus" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#1E5799"/>
+    </marker>
+  </defs>
+
+  <rect width="1100" height="340" fill="#F4F6F9"/>
+  <rect x="0" y="0" width="1100" height="5" fill="#0D2C54"/>
+
+  <text x="550" y="32" text-anchor="middle" fill="#0D2C54" font-size="12" font-weight="bold" letter-spacing="1.2">METHODOLOGY — GOAL-BASED PORTFOLIO OPTIMISATION</text>
+  <line x1="40" y1="40" x2="1060" y2="40" stroke="#C8CDD6" stroke-width="0.8"/>
+
+  <!-- BLOCK 1: Data Collection -->
+  <rect x="40" y="65" width="160" height="160" rx="5" fill="#0D2C54"/>
+  <rect x="40" y="65" width="160" height="6" rx="5" fill="#1E5799"/>
+  <text x="120" y="118" text-anchor="middle" fill="#FFFFFF" font-size="11" font-weight="bold">Data Collection</text>
+  <line x1="60" y1="127" x2="180" y2="127" stroke="#1E5799" stroke-width="0.7"/>
+  <text x="120" y="143" text-anchor="middle" fill="#A8C4E0" font-size="9.5">5 NSE tickers</text>
+  <text x="120" y="158" text-anchor="middle" fill="#A8C4E0" font-size="9.5">via yfinance</text>
+  <text x="120" y="173" text-anchor="middle" fill="#A8C4E0" font-size="9.5">Jan 2014–Dec 2023</text>
+  <text x="120" y="188" text-anchor="middle" fill="#A8C4E0" font-size="9.5">2,465 trading days</text>
+  <text x="120" y="207" text-anchor="middle" fill="#666666" font-size="8.5" font-style="italic">mu · sigma · cov · savings</text>
+
+  <line x1="200" y1="145" x2="228" y2="145" stroke="#C8CDD6" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- BLOCK 2: Two Sequences -->
+  <rect x="230" y="65" width="170" height="74" rx="5" fill="#0D5C6B"/>
+  <rect x="230" y="65" width="170" height="6" rx="5" fill="#0A8FA8"/>
+  <text x="315" y="98" text-anchor="middle" fill="#FFFFFF" font-size="10.5" font-weight="bold">Sequence A</text>
+  <text x="315" y="113" text-anchor="middle" fill="#A8DDE8" font-size="9">Aggressive Early Goals</text>
+  <text x="315" y="127" text-anchor="middle" fill="#A8DDE8" font-size="8.5">15L·Yr3 · 25L·Yr7 · 30L·Yr12</text>
+
+  <rect x="230" y="151" width="170" height="74" rx="5" fill="#1E7D46"/>
+  <rect x="230" y="151" width="170" height="6" rx="5" fill="#27A960"/>
+  <text x="315" y="183" text-anchor="middle" fill="#FFFFFF" font-size="10.5" font-weight="bold">Sequence B</text>
+  <text x="315" y="198" text-anchor="middle" fill="#A8EDBE" font-size="9">Backloaded Goals</text>
+  <text x="315" y="213" text-anchor="middle" fill="#A8EDBE" font-size="8.5">10L·Yr8 · 20L·Yr12 · 40L·Yr16</text>
+
+  <line x1="238" y1="145" x2="392" y2="145" stroke="#F4F6F9" stroke-width="1.5"/>
+
+  <line x1="400" y1="102" x2="428" y2="102" stroke="#C8CDD6" stroke-width="1.2"/>
+  <line x1="400" y1="188" x2="428" y2="188" stroke="#C8CDD6" stroke-width="1.2"/>
+  <line x1="428" y1="102" x2="428" y2="188" stroke="#C8CDD6" stroke-width="1.2"/>
+  <line x1="428" y1="145" x2="456" y2="145" stroke="#C8CDD6" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- BLOCK 3: Optimal Weights via MC -->
+  <rect x="458" y="65" width="175" height="160" rx="5" fill="#0D2C54"/>
+  <rect x="458" y="65" width="175" height="6" rx="5" fill="#1E5799"/>
+  <text x="545" y="101" text-anchor="middle" fill="#FFFFFF" font-size="11" font-weight="bold">Optimal Weights</text>
+  <text x="545" y="116" text-anchor="middle" fill="#FFFFFF" font-size="11" font-weight="bold">via Brute-Force</text>
+  <line x1="478" y1="125" x2="613" y2="125" stroke="#1E5799" stroke-width="0.7"/>
+  <text x="545" y="141" text-anchor="middle" fill="#A8C4E0" font-size="9.5">Weights in {0,0.25,0.5,0.75,1}</text>
+  <text x="545" y="156" text-anchor="middle" fill="#A8C4E0" font-size="9.5">Sum = 1  |  56 combos</text>
+  <text x="545" y="171" text-anchor="middle" fill="#A8C4E0" font-size="9.5">Monte Carlo sampling</text>
+  <text x="545" y="186" text-anchor="middle" fill="#A8C4E0" font-size="9.5">rt ~ MVN(mu, Sigma)</text>
+  <text x="545" y="207" text-anchor="middle" fill="#666666" font-size="8.5" font-style="italic">12% borrowing penalty</text>
+  <text x="545" y="219" text-anchor="middle" fill="#666666" font-size="8.5" font-style="italic">if goal shortfall occurs</text>
+
+  <line x1="633" y1="145" x2="661" y2="145" stroke="#C8CDD6" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- BLOCK 4: Success Probability -->
+  <rect x="663" y="65" width="175" height="160" rx="5" fill="#0D2C54"/>
+  <rect x="663" y="65" width="175" height="6" rx="5" fill="#1E5799"/>
+  <text x="750" y="101" text-anchor="middle" fill="#FFFFFF" font-size="11" font-weight="bold">Estimate Success</text>
+  <text x="750" y="116" text-anchor="middle" fill="#FFFFFF" font-size="11" font-weight="bold">Probability</text>
+  <line x1="683" y1="125" x2="818" y2="125" stroke="#1E5799" stroke-width="0.7"/>
+  <text x="750" y="141" text-anchor="middle" fill="#A8C4E0" font-size="9.5">5,000 paths per combo</text>
+  <text x="750" y="156" text-anchor="middle" fill="#A8C4E0" font-size="9.5">P = #{V20 >= 1.5Cr} / 5000</text>
+  <text x="750" y="175" text-anchor="middle" fill="#A8C4E0" font-size="9.5">Seq A best:  0.00%</text>
+  <text x="750" y="190" text-anchor="middle" fill="#A8C4E0" font-size="9.5">(100% ITC)</text>
+  <text x="750" y="209" text-anchor="middle" fill="#A8EDBE" font-size="9.5">Seq B best:  54.94%</text>
+  <text x="750" y="222" text-anchor="middle" fill="#A8EDBE" font-size="9.5">(50% HDFC + 50% Rel)</text>
+
+  <line x1="838" y1="145" x2="866" y2="145" stroke="#1E5799" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrBonus)"/>
+
+  <!-- BLOCK 5: Bonus -->
+  <rect x="868" y="65" width="192" height="160" rx="5" fill="#F4F6F9" stroke="#1E5799" stroke-width="1.2" stroke-dasharray="5,3"/>
+  <text x="964" y="95" text-anchor="middle" fill="#1E5799" font-size="9" font-weight="bold" letter-spacing="0.8">BONUS</text>
+  <text x="964" y="110" text-anchor="middle" fill="#0D2C54" font-size="10.5" font-weight="bold">Continuous</text>
+  <text x="964" y="124" text-anchor="middle" fill="#0D2C54" font-size="10.5" font-weight="bold">Optimiser</text>
+  <line x1="888" y1="132" x2="1048" y2="132" stroke="#C8CDD6" stroke-width="0.7"/>
+  <text x="964" y="148" text-anchor="middle" fill="#333333" font-size="9.5">SciPy SLSQP</text>
+  <text x="964" y="163" text-anchor="middle" fill="#333333" font-size="9.5">w in R · short-selling</text>
+  <text x="964" y="178" text-anchor="middle" fill="#333333" font-size="9.5">50 random restarts</text>
+  <text x="964" y="197" text-anchor="middle" fill="#333333" font-size="9.5">Seq A: 0% to 1.26%</text>
+  <text x="964" y="212" text-anchor="middle" fill="#1E7D46" font-size="9.5" font-weight="bold">Seq B: 54.94% to 63.52%</text>
+
+  <!-- Step labels -->
+  <text x="120"  y="252" text-anchor="middle" fill="#1E5799" font-size="9" font-weight="bold" letter-spacing="0.5">STEP 1</text>
+  <text x="315"  y="252" text-anchor="middle" fill="#1E5799" font-size="9" font-weight="bold" letter-spacing="0.5">STEP 2</text>
+  <text x="545"  y="252" text-anchor="middle" fill="#1E5799" font-size="9" font-weight="bold" letter-spacing="0.5">STEP 3</text>
+  <text x="750"  y="252" text-anchor="middle" fill="#1E5799" font-size="9" font-weight="bold" letter-spacing="0.5">STEP 4</text>
+  <text x="964"  y="252" text-anchor="middle" fill="#1E5799" font-size="9" font-weight="bold" letter-spacing="0.5">BONUS</text>
+
+  <line x1="40" y1="265" x2="1060" y2="265" stroke="#C8CDD6" stroke-width="0.8"/>
+  <text x="550" y="281" text-anchor="middle" fill="#999999" font-size="8.5">Python 3 · NumPy · Pandas · SciPy · yfinance · Matplotlib  |  DA6701 — Assignment V</text>
+
+  <rect x="0" y="335" width="1100" height="5" fill="#0D2C54"/>
+
+</svg>
